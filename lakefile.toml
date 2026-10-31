@@ -1,0 +1,6 @@
+name = "css-model"
+version = "0.1.0"
+defaultTargets = ["CssModel"]
+
+[[lean_lib]]
+name = "CssModel"
