@@ -53,6 +53,14 @@ def calc3 : Value .width := .of .width
 def calc4 : Value .width := .of .width
   [math (.div (.mul (.dimension .length 1 .px) (.dimension .length 2 .px)) (.dimension .length 1 .px))]
 
+/-- An integer is also a number. -/
+def opacityInt : Value .opacity := .of .opacity [int 1]
+
+/-- `round()` may omit its interval when rounding a number. -/
+def round1 : Value .opacity := .of .opacity [math (.round none (.number 0.5) .none)]
+def round2 : Value .width := .of .width
+  [math (.round (some .up) (.dimension .length 10 .px) (.some (.dimension .length 3 .px)))]
+
 /-- A value built from Lean variables, checked at compile time. -/
 def fromVariables (x : Decimal) (h : Range.nonneg.contains x = true) (families : List String) :
     Value .font :=
@@ -76,6 +84,11 @@ example : ¬ Admits Property.width.syntax.toRegex Grammar.forProperty
     (Seg.shapeOf [math (.mul (.dimension .length 1 .px) (.dimension .length 1 .px))]) := by
   decide +kernel
 
+/-- Rounding a length needs an interval. -/
+example : ¬ Admits Property.width.syntax.toRegex Grammar.forProperty
+    (Seg.shapeOf [math (.round none (.dimension .length 10 .px) .none)]) := by
+  decide +kernel
+
 /-! The same, explained at run time. -/
 
 #guard (Value.explain .color [px 10]).isSome
@@ -85,12 +98,18 @@ example : ¬ Admits Property.width.syntax.toRegex Grammar.forProperty
 #guard (Value.explain .width [math (.add (.dimension .length 1 .px) (.dimension .time 1 .s))]).isSome
 #guard (Value.explain .margin [px 1, px 2]).isNone
 
--- The rejected component is the `-1px`, at position 1.
-#guard (Value.explain .padding [px 1, px (-1), px 1]).map (·.diagnosis) = some (.unexpected 1)
+-- The rejected component is the `-1px`, at position 1, where a nonnegative length was expected.
+#guard (Value.explain .padding [px 1, px (-1), px 1]).map (fun r => (r.position, r.expected)) =
+  some (some 1, ["<percentage [0,∞]>", "<length [0,∞]>"])
 
--- Five margins are one too many: every component is acceptable but the last.
-#guard (Value.explain .margin [px 1, px 1, px 1, px 1, px 1]).map (·.diagnosis) =
-  some (.unexpected 4)
+-- Five margins are one too many: every component is acceptable but the last, where only the
+-- end could come.
+#guard (Value.explain .margin [px 1, px 1, px 1, px 1, px 1]).map (fun r => (r.position, r.expected)) =
+  some (some 4, [])
+
+-- A value that ends too soon.
+#guard (Value.explain .gridArea [ident "a", slash]).map (fun r => (r.position, r.expected.contains "<custom-ident>")) =
+  some (none, true)
 
 /-! Serialization. -/
 

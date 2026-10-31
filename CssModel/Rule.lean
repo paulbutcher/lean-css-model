@@ -578,7 +578,8 @@ def Rule.hasUnchecked : Rule → Bool
   | .media q rules => MediaQueryList.hasUnchecked q || Rule.anyUnchecked rules
   | .supports c rules => c.hasUnchecked SupportsTest.hasUnchecked || Rule.anyUnchecked rules
   | .container c more rules => (c :: more).any (·.hasUnchecked) || Rule.anyUnchecked rules
-  | .layer _ rules | .startingStyle rules | .navigation _ rules => Rule.anyUnchecked rules
+  | .layer _ rules | .startingStyle rules => Rule.anyUnchecked rules
+  | .navigation c rules => c.hasUnchecked (fun _ => false) || Rule.anyUnchecked rules
   | .when c rules => c.hasUnchecked WhenTest.hasUnchecked || Rule.anyUnchecked rules
   | .else c rules => c.any (·.hasUnchecked WhenTest.hasUnchecked) || Rule.anyUnchecked rules
   | .scope b body => b.hasUnchecked || BlockItem.anyUnchecked body

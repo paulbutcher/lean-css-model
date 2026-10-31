@@ -122,6 +122,7 @@ def Kind.conforms (k : Kind) (s : Sym) : Bool :=
   | .keyword k => s.keywords.testBit k.id
   | .function f => s.functions.testBit f.id
   | .sep x => s.seps.testBit x.index
+  | .numeric .integer r => [s.integer, s.number].any fun x => x.any r.subset
   | .numeric n r => (s.numeric n).any r.subset
   | .simple .zero =>
     s.simple.testBit SimpleKind.zero.index ||

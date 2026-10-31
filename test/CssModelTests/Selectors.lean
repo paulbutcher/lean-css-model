@@ -54,5 +54,25 @@ def one {has pe : Bool} (c : Compound has pe) : ComplexList has pe := .one (.las
 
 -- After a pseudo-element come only the pseudo-classes it admits.
 #check_failure (Compound.withElement none [] (.simple .before) [.firstChild] : Compound true true)
+#check_failure (Compound.withElement none [] (.simple .before) [] [i "open"] : Compound true true)
+#check_failure (Compound.withElement none [] (.part (i "x")) [.firstChild] : Compound true true)
+
+#guard ser (one (Compound.withElement none [] (.part (i "x")) [.checked] [i "open"]) : SelectorList) =
+  "::part(x):checked:state(open)"
+
+/-- Pseudo-elements, the first followed by `e`. -/
+def chain {k k' : ElementKind} (first : PseudoElementSelector true k)
+    (e : PseudoElementSelector true k') (h : ElementKind.follows (some k) k' = true := by decide) :
+    Compound true true :=
+  .mk none .nil (.cons first [] [] (by cases k <;> rfl) rfl (.cons e [] [] (by cases k' <;> rfl) h .nil))
+
+#guard ser (one (chain (.simple .before) (.simple .marker))) = "::before::marker"
+#guard ser (one (chain (.part (i "x")) (.simple .before))) = "::part(x)::before"
+#guard ser (one (chain (.slotted (Compound.of (tag "p") [])) (.simple .after))) = "::slotted(p)::after"
+
+-- Only some pseudo-elements may follow another.
+#check_failure (chain (.simple .before) (.simple .before))
+#check_failure (chain (.part (i "x")) (.part (i "y")))
+#check_failure (chain (.slotted (Compound.of (tag "p") [])) (.simple .selection))
 
 end CssModelTests.Selectors

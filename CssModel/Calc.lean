@@ -139,6 +139,11 @@ def numberTo (a : MathType) (result : MathType := number) : MathType :=
   | .unknown => .unknown
   | .invalid => .invalid
 
+/-- `round()`'s interval may be omitted only when the value is a number. -/
+def round (a : MathType) : Option MathType → MathType
+  | none => a.numberTo
+  | some b => add a b
+
 /-- `sin()`, `cos()` and `tan()` take an angle or a number. -/
 def trig : MathType → MathType
   | .known t => if t.isNumber || (t.isSingle .angle && t.hint.isNone) then number else .invalid
@@ -186,7 +191,7 @@ inductive CalcExpr : MathType → Type where
   | clamp {s t u : Option MathType} {v : MathType} (lo : CalcOpt s) (val : CalcExpr v)
       (hi : CalcOpt u) : CalcExpr ((v.addOpt s).addOpt u)
   | round {s : MathType} {t : Option MathType} (strategy : Option RoundingStrategy)
-      (a : CalcExpr s) (b : CalcOpt t) : CalcExpr (s.addOpt t)
+      (a : CalcExpr s) (b : CalcOpt t) : CalcExpr (s.round t)
   | mod {s t : MathType} (a : CalcExpr s) (b : CalcExpr t) : CalcExpr (s.add t)
   | rem {s t : MathType} (a : CalcExpr s) (b : CalcExpr t) : CalcExpr (s.add t)
   | sin {s : MathType} (a : CalcExpr s) : CalcExpr s.trig

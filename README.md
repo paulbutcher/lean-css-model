@@ -48,17 +48,16 @@ A value the grammar rejects is a compile-time error:
 def bad : Declaration := decl .padding [px 10, px (-5)]
 -- error: Tactic `decide` proved that the proposition
 --   Admits Property.padding.syntax.toRegex Grammar.forProperty
---     ((sym (Kind.numeric NumericKind.length { lo := some 0 })).cat
---       ((sym (Kind.numeric NumericKind.length { })).cat eps))
+--     ((Regular.Regex.sym (Kind.numeric NumericKind.length { lo := some { mantissa := Int.ofNat 0, scale := 0 } })).cat
+--       ((Regular.Regex.sym (Kind.numeric NumericKind.length { })).cat Regular.Regex.eps))
 -- is false
 ```
 
-and `Value.explain` says which component is wrong, here the second, whose range is unbounded where `padding` needs it nonnegative:
+and `Value.explain` says which component is wrong and what the grammar expected there, here the second, whose range is unbounded where `padding` needs it nonnegative:
 
 ```lean
-#eval (Value.explain .padding [px 10, px (-5)]).map fun r => (r.counterexample, r.diagnosis)
--- some ([(0, Kind.numeric .length { lo := some 0 }), (1, Kind.numeric .length { })],
---   Regular.Diagnosis.unexpected 1)
+#eval (Value.explain .padding [px 10, px (-5)]).map fun r => (r.position, r.expected)
+-- some (some 1, ["<percentage [0,∞]>", "<length [0,∞]>"])
 ```
 
 - Components are `kw` for keywords, `ident`, `dashed`, `str`, `url`, `hex`, `num`, `int`, `pct`, the dimensions (`px`, `em`, `rem`, `vw`, `vh`, `deg`, `sec`, `ms`, `fr`, and `length` and `dim` for any unit), `zero` for a unitless `0`, `slash` and `comma`, `fn` for a function, `math` for a math function, and `var` for `var()`. A component's type records its kind, never its magnitude.
@@ -71,9 +70,9 @@ and `Value.explain` says which component is wrong, here the second, whose range 
 
 ## Rules and stylesheets
 
-- Selectors are Selectors Level 4's, with every attribute matcher and case flag, `:is()`, `:where()`, `:not()`, `:has()`, `:nth-child(An+B of S)`, namespaces and the nesting selector `&`. A pseudo-element ends its compound selector, followed only by the user action pseudo-classes, and `:has()` does not nest; breaking either is a type error. Type selectors are any identifier, for a consumer to check against its elements.
+- Selectors are Selectors Level 4's, with every attribute matcher and case flag, `:is()`, `:where()`, `:not()`, `:has()`, `:nth-child(An+B of S)`, namespaces and the nesting selector `&`. A pseudo-element ends its compound selector, followed only by the user action pseudo-classes, except that `::part()` admits any pseudo-class that does not depend on the tree, `:state()` included; one pseudo-element may follow another only as CSS allows, as `::before::marker`, `::part(x)::before` and `::slotted(p)::after` do; and `:has()` does not nest. Breaking any of these is a type error. Type selectors are any identifier, for a consumer to check against its elements.
 - Style rules nest, by CSS Nesting, with relative selectors and conditional group rules. Every at-rule in the data is modelled: `@media`, `@supports`, `@container`, `@layer`, `@scope`, `@starting-style`, `@keyframes`, `@font-face`, `@font-feature-values`, `@counter-style`, `@property`, `@page` with its margin rules, `@import`, `@namespace`, `@font-palette-values`, `@color-profile`, `@position-try`, `@view-transition`, `@custom-media`, `@custom-selector`, `@function`, `@mixin`, `@apply`, `@contents`, `@when`, `@else`, `@navigation`, `@location`, `@supports-condition` and `@private`.
-- Media queries, with Level 4's range syntax, `@supports` conditions and container queries are typed, each feature's value by its grammar, and range syntax only for range features. Descriptors are typed by their at-rule's grammars, through `desc`.
+- Media queries, with Level 4's range syntax, `@supports` conditions and container queries are typed, each feature's value by its grammar, and range syntax only for range features. A container feature is tested only by its own kind of query: a size query, `scroll-state()` or `anchored()`. Descriptors are typed by their at-rule's grammars, through `desc`.
 - `Stylesheet` holds `@layer` statements and `@import` rules, then `@namespace` rules, then everything else, which is the order CSS requires. `@charset` is left to the transport.
 - `serialize` lays a stylesheet, rule or declaration list out `.indented` or `.compact`. `Declaration.propertyName` and `Declaration.valueText` give a declaration's name and value as separate strings, as `style.setProperty` takes them, and `DeclarationList.properties` gives them for a whole `style` attribute.
 - Identifiers and strings are escaped as CSSOM specifies, except that `<` is escaped as `\3c `.
@@ -89,14 +88,14 @@ and `Value.explain` says which component is wrong, here the second, whose range 
 
 The property, type, function, descriptor, media feature, pseudo-class and pseudo-element data is generated from [`@webref/css`](https://www.npmjs.com/package/@webref/css) 8.7.8, vendored as `gen/webref/css.json`. The generator in `gen` translates each grammar from Value Definition Syntax, inlining type references within a level and reporting any cycle that does not pass through a function, and checks in its output as `CssModel/Generated`, so that building the library needs neither the generator nor the network. `lake run generate` regenerates it, and `lake run generate --check` fails if the checked-in files are not what it would generate.
 
-817 of the data's 822 properties are translated. What the generator cannot translate, such as types defined only in prose, is listed in `gen/untranslated.txt`; a grammar that refers to one leaves that part out, so it accepts less rather than more, and the rest is left to the escape hatches.
+817 of the data's 822 properties are translated. What the generator cannot translate, such as types defined only in prose, and any at-rule in the data that the model lacks, is listed in `gen/untranslated.txt`; a grammar that refers to one leaves that part out, so it accepts less rather than more, and the rest is left to the escape hatches.
 
 ## Performance
 
-One acceptance proof is elaborated per declaration, by `decide +kernel` on the value's shape, which is first reduced to normal form so that literals of the same kind share their proof. `lake run bench` times single declarations and a stylesheet of 425 declarations in 85 rules:
+One acceptance proof is elaborated per declaration, by `decide +kernel` on the value's shape, which is first reduced to normal form, so that the proof depends on the components' kinds and never on their values. `lake run bench` times single declarations and a stylesheet of 425 declarations in 85 rules:
 
 - `display: flex` and `margin: 0 auto` take under 10 ms, `color: rgb(...)` 35 ms, `font` 75 ms, and `background` with two layers, the slowest, about 280 ms.
-- The stylesheet takes about 3.9 s as one term, about 9 ms a declaration. Defined a rule at a time, the same declarations take about 1.4 s.
+- The stylesheet takes about 3.9 s, about 9 ms a declaration.
 
 ## Formal verification
 

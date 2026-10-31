@@ -40,6 +40,13 @@ def either : MediaQuery := .condition (.or (.test (.boolean .hover)) (.test (.pl
 -- `width` is a range feature and `hover` is not, so only `width` takes range syntax.
 #check_failure (FeatureTest.compare MediaFeature.hover .lt (GrammarValue.of [kw .none]))
 
+def stuck : FeatureTest ContainerFeature := .plain .stuck (GrammarValue.of [kw .top])
+def scrolled : ContainerTest := .scrollState (.test stuck)
+
+-- Size features and scroll-state features each belong to their own query.
+#check_failure (ContainerTest.size stuck)
+#check_failure (ContainerTest.scrollState (.test (.boolean ContainerFeature.width)))
+
 /-! Rules and stylesheets. -/
 
 def card : Rule := .style (cls "card") [
@@ -93,6 +100,7 @@ def custom : Declaration := .custom ⟨"--gap", by decide +kernel⟩ ⟨[.dimens
 #guard !({ rules := [.style (cls "x") [.decl vendor]] } : Stylesheet).hasVerbatim
 #guard ({ rules := [raw] } : Stylesheet).hasVerbatim
 #guard !({ rules := [.style (cls "x") [.decl custom]] } : Stylesheet).hasUnchecked
+#guard ({ rules := [.navigation (.unchecked ⟨[.ident (i "x")], rfl⟩) []] } : Stylesheet).hasUnchecked
 #guard ({ rules := [.unchecked {
     name := i "-moz-document", prelude := [.function (i "url-prefix") []],
     block := some [] }] } : Stylesheet).serialize .compact == "@-moz-document url-prefix(){}"

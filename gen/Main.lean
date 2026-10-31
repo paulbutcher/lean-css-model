@@ -37,6 +37,20 @@ def descriptorRules : List String :=
   ["@font-face", "@counter-style", "@property", "@page", "@font-palette-values", "@color-profile",
     "@view-transition", "@font-feature-values", "@function"]
 
+/-- At-rules `CssModel.Rule` models by hand, so that one the data adds is reported. `@charset` is
+left to the transport. -/
+def handModelledRules : List String :=
+  ["@charset", "@import", "@namespace", "@layer", "@supports", "@scope", "@starting-style",
+    "@keyframes", "@-webkit-keyframes", "@position-try", "@custom-media", "@custom-selector",
+    "@mixin", "@apply", "@contents", "@when", "@else", "@navigation", "@location",
+    "@supports-condition", "@private",
+    "@top-left-corner", "@top-left", "@top-center", "@top-right", "@top-right-corner",
+    "@bottom-left-corner", "@bottom-left", "@bottom-center", "@bottom-right",
+    "@bottom-right-corner", "@left-top", "@left-middle", "@left-bottom", "@right-top",
+    "@right-middle", "@right-bottom",
+    "@stylistic", "@historical-forms", "@styleset", "@character-variant", "@swash", "@ornaments",
+    "@annotation"]
+
 def str (j : Json) (k : String) : Option String := (j.getObjValAs? String k).toOption
 
 def arr (j : Json) (k : String) : Array Json := (j.getObjValAs? (Array Json) k).toOption.getD #[]
@@ -64,29 +78,25 @@ def main (args : List String) : IO UInt32 := do
   let check := args.contains "--check"
   let json ← IO.ofExcept (Json.parse (← IO.FS.readFile dataPath))
   let mut report : Array String := #[]
-  let parseOr (s : Option String) : IO (Option Gen.Term) := do
-    match s with
-    | none => pure none
-    | some s => match Gen.parse s with
-      | .ok t => pure (some t)
-      | .error _ => pure none
   -- Definitions.
   let mut types : HashMap String (List Def) := {}
   for t in arr json "types" do
     let name := (str t "name").getD ""
-    let body ← parseOr (str t "syntax")
+    let body := (str t "syntax").map Gen.parse
+    if let some (.error e) := body then report := report.push s!"type <{name}>: {e}"
     types := types.insert name (types.getD name [] ++ [⟨name, scopesOf t, body⟩])
   let mut functions : HashMap String (List Def) := {}
   for f in arr json "functions" do
     let name := stripParens ((str f "name").getD "")
-    let body ← parseOr (str f "syntax")
+    let body := (str f "syntax").map Gen.parse
+    if let some (.error e) := body then report := report.push s!"function {name}(): {e}"
     functions := functions.insert name (functions.getD name [] ++ [⟨name, scopesOf f, body⟩])
   let mut properties : HashMap String Gen.Term := {}
   let mut propertyList : Array (String × Option String) := #[]
   for p in arr json "properties" do
     let name := (str p "name").getD ""
     propertyList := propertyList.push (name, str p "syntax")
-    if let some t ← parseOr (str p "syntax") then properties := properties.insert name t
+    if let some (.ok t) := (str p "syntax").map Gen.parse then properties := properties.insert name t
   let mut overrides : HashMap String Gen.Term := {}
   for (n, s) in proseOverrides do
     overrides := overrides.insert n (← IO.ofExcept (Gen.parse s))
@@ -117,10 +127,12 @@ def main (args : List String) : IO UInt32 := do
         some (capitalize (camel (String.ofList (rname.toList.drop 1))) ++ "Descriptor")
       else none
     let descs := arr rule "descriptors"
+    if typeName?.isNone && !handModelledRules.contains rname then
+      report := report.push s!"at-rule {rname}: not modelled"
     match typeName? with
     | none =>
       for d in descs do
-        report := report.push s!"descriptor {rname} {(str d "name").getD ""}: at-rule not modelled"
+        report := report.push s!"descriptor {rname} {(str d "name").getD ""}: no descriptor table for its at-rule"
     | some typeName =>
       let mut entries : Array Entry := #[]
       let mut ranges : Array Bool := #[]
@@ -186,11 +198,11 @@ def main (args : List String) : IO UInt32 := do
     else strip v.owner ++ "-" ++ v.css
   let fnLean := assignNames wanted
   -- Variants with equal arguments accept each other's components.
-  let sameAs : Array (List Nat) := vs.mapIdx fun i v =>
-    (List.range vs.size).filter fun j =>
-      j == i || (vs[j]!.css == v.css && vs[j]!.bracket == v.bracket && vs[j]!.translated == v.translated)
+  let sameAs : Array (List Nat) := vs.map fun v =>
+    (vs.toList.zipIdx.filter fun (w, _) =>
+      w.css == v.css && w.bracket == v.bracket && w.translated == v.translated).map (·.2)
   let expandAtom (a : Atom) : Atom :=
-    { a with functions := (a.functions.flatMap fun i => sameAs[i]!).mergeSort (· ≤ ·) |>.eraseDups }
+    { a with functions := (a.functions.flatMap fun i => sameAs[i]?.getD [i]).mergeSort (· ≤ ·) |>.eraseDups }
   let rec expand : V → V
     | .atom a => .atom (expandAtom a)
     | .seq xs => .seq (xs.attach.map fun ⟨x, _⟩ => expand x)

@@ -32,8 +32,20 @@ def card : Rule := .style (.one (.last (Compound.of none [.cls ⟨"card", rfl⟩
 
 #guard (font 12 rfl ["Roboto"]).serialize == "font: 12px \"Inter\", \"Roboto\""
 
-#check_failure (decl .padding [px 10, px (-5)])
+/--
+error: could not synthesize default value for parameter 'h' using tactics
+---
+error: Tactic `decide` proved that the proposition
+  Admits Property.padding.syntax.toRegex Grammar.forProperty
+    ((Regular.Regex.sym (Kind.numeric NumericKind.length { lo := some { mantissa := Int.ofNat 0, scale := 0 } })).cat
+      ((Regular.Regex.sym (Kind.numeric NumericKind.length { })).cat Regular.Regex.eps))
+is false
+-/
+#guard_msgs in
+def bad : Declaration := decl .padding [px 10, px (-5)]
 
-#guard (Value.explain .padding [px 10, px (-5)]).map (·.diagnosis) = some (.unexpected 1)
+/-- info: some (some 1, ["<percentage [0,∞]>", "<length [0,∞]>"]) -/
+#guard_msgs in
+#eval (Value.explain .padding [px 10, px (-5)]).map fun r => (r.position, r.expected)
 
 end CssModelTests.Readme

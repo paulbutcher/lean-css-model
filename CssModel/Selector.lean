@@ -12,7 +12,7 @@ public import CssModel.Generated.Selectors
 /-! Selectors Level 4. The types carry two flags: whether `:has()` may appear, which it may not
 within its own argument, and whether pseudo-elements may, which they may not within `:is()`,
 `:where()`, `:not()`, `:has()` or an `of S` clause. A pseudo-element ends its compound selector
-by construction, followed only by the pseudo-classes it admits. -/
+by construction, followed only by the pseudo-classes and pseudo-elements it admits. -/
 
 namespace CssModel
 
@@ -126,9 +126,44 @@ def Nth.name : Nth → String
   | .child => "nth-child" | .lastChild => "nth-last-child" | .ofType => "nth-of-type"
   | .lastOfType => "nth-last-of-type" | .col => "nth-col" | .lastCol => "nth-last-col"
 
-/-- The pseudo-classes a pseudo-element admits after it: the user action pseudo-classes. -/
+/-- The user action pseudo-classes, which any pseudo-element admits after it. -/
 def PseudoClass.afterElement (p : PseudoClass) : Bool :=
   p.name ∈ ["hover", "active", "focus", "focus-visible", "focus-within"]
+
+/-- The pseudo-classes that match by an element's place in the tree, which `::part()` never
+matches. -/
+def PseudoClass.structural (p : PseudoClass) : Bool :=
+  p.name ∈ ["root", "empty", "first-child", "last-child", "only-child", "first-of-type",
+    "last-of-type", "only-of-type", "scope", "host", "has-slotted"]
+
+/-- What a pseudo-element is, for what may follow it. -/
+inductive ElementKind where
+  | before | after | marker | part | slotted | other
+  deriving DecidableEq, Repr
+
+def ElementKind.ofSimple (p : PseudoElement) : ElementKind :=
+  if p.name == "before" then .before
+  else if p.name == "after" then .after
+  else if p.name == "marker" then .marker
+  else .other
+
+/-- Whether a pseudo-element of kind `k` admits the pseudo-classes `classes` and `:state()`s
+`states` after it: `::part()` any that match by the element alone, by CSS Shadow Parts, and the
+rest only the user action pseudo-classes. -/
+def ElementKind.admits (k : ElementKind) (classes : List PseudoClass) (states : List Ident) : Bool :=
+  if k == .part then classes.all (!·.structural)
+  else classes.all PseudoClass.afterElement && states.isEmpty
+
+/-- Whether a pseudo-element of kind `k` may follow `prev`, or start the tail if there is none:
+`::marker` after `::before` or `::after`, by CSS Pseudo-Elements; any but `::part()` after
+`::part()`, by CSS Shadow Parts; and `::before`, `::after` or `::marker` after `::slotted()`, by
+CSS Scoping. -/
+def ElementKind.follows : Option ElementKind → ElementKind → Bool
+  | none, _ => true
+  | some .before, .marker | some .after, .marker => true
+  | some .part, k => k != .part
+  | some .slotted, k => k == .before || k == .after || k == .marker
+  | _, _ => false
 
 inductive ViewTransitionPart where
   | group | imagePair | old | new | groupChildren
@@ -171,31 +206,34 @@ inductive Subclasses : Bool → Type where
   | nil {has : Bool} : Subclasses has
   | cons {has : Bool} (s : Subclass has) (rest : Subclasses has) : Subclasses has
 
-inductive PseudoElementSelector : Bool → Type where
-  | simple {has : Bool} (p : PseudoElement) : PseudoElementSelector has
-  | slotted {has : Bool} (c : Compound has false) : PseudoElementSelector has
-  | part {has : Bool} (name : Ident) (more : List Ident := []) : PseudoElementSelector has
-  | highlight {has : Bool} (name : CustomIdent) : PseudoElementSelector has
+/-- A pseudo-element, indexed by its kind. -/
+inductive PseudoElementSelector : Bool → ElementKind → Type where
+  | simple {has : Bool} (p : PseudoElement) : PseudoElementSelector has (.ofSimple p)
+  | slotted {has : Bool} (c : Compound has false) : PseudoElementSelector has .slotted
+  | part {has : Bool} (name : Ident) (more : List Ident := []) : PseudoElementSelector has .part
+  | highlight {has : Bool} (name : CustomIdent) : PseudoElementSelector has .other
   /-- A view transition pseudo-element, of a named group or of every group. -/
   | viewTransition {has : Bool} (part : ViewTransitionPart) (name : Option CustomIdent) :
-      PseudoElementSelector has
+      PseudoElementSelector has .other
   /-- A functional pseudo-element whose argument is not modelled, so is unchecked. -/
   | functional {has : Bool} (f : PseudoElementFunction) (args : TokenSeq) :
-      PseudoElementSelector has
+      PseudoElementSelector has .other
 
-/-- The pseudo-elements that end a compound selector, each with the pseudo-classes after it.
-Only where pseudo-elements are allowed can there be any. -/
-inductive PseudoTail : Bool → Bool → Type where
-  | nil {has pe : Bool} : PseudoTail has pe
-  | cons {has : Bool} (e : PseudoElementSelector has) (classes : List PseudoClass)
-      (ok : classes.all PseudoClass.afterElement = true) (rest : PseudoTail has true) :
-      PseudoTail has true
+/-- The pseudo-elements that end a compound selector, each with the pseudo-classes after it,
+indexed by the kind of the one before, if any. Only where pseudo-elements are allowed can there
+be any. -/
+inductive PseudoTail : Bool → Bool → Option ElementKind → Type where
+  | nil {has pe : Bool} {prev : Option ElementKind} : PseudoTail has pe prev
+  | cons {has : Bool} {prev : Option ElementKind} {k : ElementKind}
+      (e : PseudoElementSelector has k) (classes : List PseudoClass) (states : List Ident)
+      (ok : k.admits classes states = true) (follows : ElementKind.follows prev k = true)
+      (rest : PseudoTail has true (some k)) : PseudoTail has true prev
 
 /-- A compound selector: an optional type selector, then subclass selectors, then
 pseudo-elements. -/
 inductive Compound : Bool → Bool → Type where
   | mk {has pe : Bool} (type : Option TypeSelector) (subclasses : Subclasses has)
-      (tail : PseudoTail has pe) : Compound has pe
+      (tail : PseudoTail has pe none) : Compound has pe
 
 inductive OptCompound : Bool → Type where
   | none {has : Bool} : OptCompound has
@@ -239,10 +277,11 @@ def Compound.of {has pe : Bool} (type : Option TypeSelector := none) (subclasses
   .mk type (Subclasses.ofList subclasses) .nil
 
 /-- A compound selector ending in a pseudo-element. -/
-def Compound.withElement {has : Bool} (type : Option TypeSelector) (subclasses : List (Subclass has))
-    (e : PseudoElementSelector has) (classes : List PseudoClass := [])
-    (ok : classes.all PseudoClass.afterElement = true := by decide) : Compound has true :=
-  .mk type (Subclasses.ofList subclasses) (.cons e classes ok .nil)
+def Compound.withElement {has : Bool} {k : ElementKind} (type : Option TypeSelector)
+    (subclasses : List (Subclass has)) (e : PseudoElementSelector has k)
+    (classes : List PseudoClass := []) (states : List Ident := [])
+    (ok : k.admits classes states = true := by decide) : Compound has true :=
+  .mk type (Subclasses.ofList subclasses) (.cons e classes states ok rfl .nil)
 
 /-- A type selector without a namespace. -/
 def TypeSelector.tag (name : String) (h : name.isEmpty = false := by decide +kernel) : TypeSelector :=
@@ -305,7 +344,8 @@ def Subclasses.pieces {has : Bool} : Subclasses has → List Piece
   | .nil => []
   | .cons s rest => Subclass.pieces s ++ Subclasses.pieces rest
 
-def PseudoElementSelector.pieces {has : Bool} : PseudoElementSelector has → List Piece
+def PseudoElementSelector.pieces {has : Bool} {k : ElementKind} : PseudoElementSelector has k →
+    List Piece
   | .simple p => [.punct .colon, .punct .colon, .ident p.name]
   | .slotted c => pseudoFn [.punct .colon, .punct .colon] "slotted" (Compound.pieces c)
   | .part n more => pseudoFn [.punct .colon, .punct .colon] "part"
@@ -317,10 +357,12 @@ def PseudoElementSelector.pieces {has : Bool} : PseudoElementSelector has → Li
       | none => [.punct .star])
   | .functional f args => pseudoFn [.punct .colon, .punct .colon] f.name args.pieces
 
-def PseudoTail.pieces {has pe : Bool} : PseudoTail has pe → List Piece
+def PseudoTail.pieces {has pe : Bool} {prev : Option ElementKind} : PseudoTail has pe prev →
+    List Piece
   | .nil => []
-  | .cons e classes _ rest =>
+  | .cons e classes states _ _ rest =>
     PseudoElementSelector.pieces e ++ classes.flatMap (fun p => [.punct .colon, .ident p.name]) ++
+      states.flatMap (fun n => pseudoFn [.punct .colon] "state" [.ident n.name]) ++
       PseudoTail.pieces rest
 
 def Compound.pieces {has pe : Bool} : Compound has pe → List Piece
@@ -364,14 +406,16 @@ def Subclasses.hasUnchecked {has : Bool} : Subclasses has → Bool
   | .nil => false
   | .cons s rest => Subclass.hasUnchecked s || Subclasses.hasUnchecked rest
 
-def PseudoElementSelector.hasUnchecked {has : Bool} : PseudoElementSelector has → Bool
+def PseudoElementSelector.hasUnchecked {has : Bool} {k : ElementKind} :
+    PseudoElementSelector has k → Bool
   | .functional .. => true
   | .slotted c => Compound.hasUnchecked c
   | _ => false
 
-def PseudoTail.hasUnchecked {has pe : Bool} : PseudoTail has pe → Bool
+def PseudoTail.hasUnchecked {has pe : Bool} {prev : Option ElementKind} :
+    PseudoTail has pe prev → Bool
   | .nil => false
-  | .cons e _ _ rest => PseudoElementSelector.hasUnchecked e || PseudoTail.hasUnchecked rest
+  | .cons e _ _ _ _ rest => PseudoElementSelector.hasUnchecked e || PseudoTail.hasUnchecked rest
 
 def Compound.hasUnchecked {has pe : Bool} : Compound has pe → Bool
   | .mk _ subclasses tail => Subclasses.hasUnchecked subclasses || PseudoTail.hasUnchecked tail

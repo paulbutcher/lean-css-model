@@ -1,3 +1,8 @@
+type <general-enclosed>: expected Gen.Tok.closeGroup, found Gen.Tok.closeParen
+type <if-condition>: unsupported nested reference in <boolean-expr[ <if-test> ]> | else
+type <keyframe-block>: bad multiplier in <keyframe-selector># { <declaration-list> }
+type <location-rule>: unexpected character @ in @location <dashed-ident> { <declaration-list> }
+type <pseudo-class-selector>: trailing tokens [Gen.Tok.closeParen] in : <ident-token> | : <function-token> <any-value> )
 property -webkit-box-align: no syntax in the data
 property -webkit-box-flex: no syntax in the data
 property -webkit-box-ordinal-group: no syntax in the data

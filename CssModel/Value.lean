@@ -450,7 +450,62 @@ from 0, and how that sequence goes wrong. -/
 structure Rejection where
   shape : Regex Kind
   counterexample : List (Nat × Kind)
-  diagnosis : Diagnosis
+  diagnosis : Diagnosis Sym
+
+def Range.describe (r : Range) : String :=
+  if r == .all then "" else
+    let bound := fun (b : Option Decimal) (inf : String) => (b.map toString).getD inf
+    s!" [{bound r.lo "-∞"},{bound r.hi "∞"}]"
+
+def Sep.text : Sep → String
+  | .comma => "," | .slash => "/" | .colon => ":" | .semicolon => ";" | .plus => "+"
+  | .minus => "-" | .star => "*" | .eq => "=" | .lt => "<" | .gt => ">" | .dot => "."
+  | .bar => "|" | .dollar => "$"
+
+def SimpleKind.describe : SimpleKind → String
+  | .customIdent => "<custom-ident>" | .dashedIdent => "<dashed-ident>" | .string => "<string>"
+  | .url => "<url>" | .hexColor => "<hex-color>" | .unicodeRange => "<unicode-range-token>"
+  | .hash => "<hash-token>" | .tokens => "<declaration-value>" | .zero => "0"
+  | .substitution => "var()"
+
+def Func.describe (f : Func) : String :=
+  match f.bracket with
+  | .function => f.name ++ "()"
+  | .parens => "( )"
+  | .brackets => "[ ]"
+
+/-- What `s` admits, in Value Definition Syntax: keywords, functions, punctuation and types. -/
+def Sym.describe (s : Sym) : List String :=
+  if s.any then ["<any-value>"] else
+    let bitsOf := fun (n count : Nat) => (List.range count).filter n.testBit
+    let keywords :=
+      if s.keywords == Keyword.allBits then ["<ident>"]
+      else (bitsOf s.keywords Keyword.names.size).filterMap (Keyword.names[·]?)
+    let numeric : List (String × Option Range) :=
+      [("number", s.number), ("integer", s.integer), ("percentage", s.percentage),
+        ("length", s.length), ("angle", s.angle), ("time", s.time),
+        ("frequency", s.frequency), ("resolution", s.resolution), ("flex", s.flex)]
+    keywords ++
+      (bitsOf s.functions Func.names.size).filterMap (fun i =>
+        if h : i < Func.names.size then some (Func.describe ⟨i, h⟩) else none) ++
+      ([Sep.comma, .slash, .colon, .semicolon, .plus, .minus, .star, .eq, .lt, .gt, .dot, .bar,
+        .dollar].filter (s.seps.testBit ·.index)).map (s!"'{·.text}'") ++
+      ([SimpleKind.customIdent, .dashedIdent, .string, .url, .hexColor, .unicodeRange, .hash,
+        .tokens, .zero, .substitution].filter (s.simple.testBit ·.index)).map SimpleKind.describe ++
+      numeric.filterMap fun (n, r) => r.map fun r => s!"<{n}{r.describe}>"
+
+/-- What the grammar would have accepted where the rejected sequence goes wrong. Empty for a
+component the grammar does not accept, when only the end of the value could come there. -/
+def Rejection.expected (r : Rejection) : List String :=
+  match r.diagnosis with
+  | .unexpected _ e | .incomplete e => (e.flatMap Sym.describe).eraseDups
+  | .accepted => []
+
+/-- The position of the component where the value goes wrong, or `none` if it ends too soon. -/
+def Rejection.position (r : Rejection) : Option Nat :=
+  match r.diagnosis with
+  | .unexpected i _ => r.counterexample[i]?.map (·.1)
+  | _ => none
 
 /-- `none` when `extend g` accepts the shape. The diagnosis is against `g` itself, since a
 property's extensions accept any prefix, which a substitution could complete. -/

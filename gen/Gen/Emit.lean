@@ -98,7 +98,7 @@ def atomLit (n : Names) (a : Atom) : String :=
       else if kws.isEmpty then []
       else [s!"keywords := Sym.keywordSet [{", ".intercalate kws}]"]) ++
     (if a.functions.isEmpty then [] else
-      [s!"functions := Sym.functionSet [{", ".intercalate (a.functions.map fun i => "." ++ n.functions[i]!)}]"]) ++
+      [s!"functions := Sym.functionSet [{", ".intercalate (a.functions.map fun i => "." ++ (n.functions[i]?.getD s!"missingFunction{i}"))}]"]) ++
     (if a.seps.isEmpty then [] else
       [s!"seps := Sym.sepSet [{", ".intercalate (a.seps.map ("." ++ ·))}]"]) ++
     (if a.simple.isEmpty then [] else
@@ -166,7 +166,7 @@ def emitSyntax (type : String) (n : Names) (leanNames : List String) (vs : List 
   let defs := String.join ((leanNames.zip vs).map fun (l, v) =>
     s!"def {l} : Vds :=\n  {v.render n 2}\n\n")
   let count := leanNames.length
-  let leaf := fun i => s!"{type}Syntax.{leanNames[i]!}"
+  let leaf := fun i => s!"{type}Syntax.{(leanNames[i]?.getD s!"missing{i}")}"
   s!"namespace {type}Syntax\n\n" ++ defs ++ s!"end {type}Syntax\n\n" ++
   let body := if count == 0 then ".oneOf []" else dispatch leaf 0 count 2 64
   let param := if count ≤ 1 then "_" else "i"

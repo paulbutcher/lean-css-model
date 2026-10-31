@@ -72,6 +72,19 @@ def anyUnchecked {α : Type} (test : α → Bool) : List (Cond α) → Bool
   | c :: cs => hasUnchecked test c || anyUnchecked test cs
 end
 
+mutual
+/-- Whether every test satisfies `p`. -/
+def allTests {α : Type} (p : α → Bool) : Cond α → Bool
+  | .test a => p a
+  | .not c => allTests p c
+  | .and a b rest | .or a b rest => allTests p a && allTests p b && allTestsList p rest
+  | .unchecked _ => true
+
+def allTestsList {α : Type} (p : α → Bool) : List (Cond α) → Bool
+  | [] => true
+  | c :: cs => allTests p c && allTestsList p cs
+end
+
 end Cond
 
 /-- A comparison in range syntax. -/
@@ -128,6 +141,10 @@ def FeatureTest.pieces {F : Type} [FeatureTable F] : FeatureTest F → List Piec
     paren (lo.pieces ++ (op loStrict).pieces ++ .ident (FeatureTable.name f) :: (op hiStrict).pieces ++ hi.pieces)
 where
   paren (ps : List Piece) : List Piece := .punct .openParen :: ps ++ [.punct .closeParen]
+
+def FeatureTest.feature {F : Type} [FeatureTable F] : FeatureTest F → F
+  | .plain f _ | .min f _ _ | .max f _ _ | .boolean f | .compare f _ _ _ | .compareRev f _ _ _
+  | .between f .. => f
 
 /-! ## Media queries -/
 
@@ -212,26 +229,41 @@ def StyleTest.hasUnchecked : StyleTest → Bool
   | .declaration d => d.hasUnchecked
   | .defined _ => false
 
-/-- The container features that only `scroll-state()` tests. -/
-def ContainerFeature.isScrollState (f : ContainerFeature) : Bool :=
-  f.name ∈ ["scrollable", "scrolled", "snapped", "stuck"]
+/-- Which kind of container query tests a feature: a size query in bare parentheses,
+`scroll-state()` or `anchored()`. The data does not say. -/
+inductive ContainerQueryType where
+  | size | scrollState | anchored
+  deriving DecidableEq, Repr
+
+def ContainerFeature.queryType (f : ContainerFeature) : ContainerQueryType :=
+  if f.name ∈ ["scrollable", "scrolled", "snapped", "stuck"] then .scrollState
+  else if f.name == "fallback" then .anchored
+  else .size
+
+/-- Whether every feature `q` tests is of type `t`. -/
+def Cond.testsOnly (t : ContainerQueryType) (q : Cond (FeatureTest ContainerFeature)) : Bool :=
+  q.allTests fun x => x.feature.queryType == t
 
 inductive ContainerTest where
   /-- A size feature, in parentheses. -/
-  | size (t : FeatureTest ContainerFeature)
+  | size (t : FeatureTest ContainerFeature) (h : t.feature.queryType = .size := by decide)
   | style (q : Cond StyleTest)
-  | scrollState (q : Cond (FeatureTest ContainerFeature))
+  | scrollState (q : Cond (FeatureTest ContainerFeature)) (h : q.testsOnly .scrollState := by decide)
+  | anchored (q : Cond (FeatureTest ContainerFeature)) (h : q.testsOnly .anchored := by decide)
 
 def ContainerTest.pieces : ContainerTest → List Piece
-  | .size t => t.pieces
-  | .style q => .ident "style" :: .punct .openParen :: q.pieces StyleTest.pieces ++ [.punct .closeParen]
-  | .scrollState q =>
-    .ident "scroll-state" :: .punct .openParen :: q.pieces FeatureTest.pieces ++ [.punct .closeParen]
+  | .size t _ => t.pieces
+  | .style q => fn "style" (q.pieces StyleTest.pieces)
+  | .scrollState q _ => fn "scroll-state" (q.pieces FeatureTest.pieces)
+  | .anchored q _ => fn "anchored" (q.pieces FeatureTest.pieces)
+where
+  fn (name : String) (args : List Piece) : List Piece :=
+    .ident name :: .punct .openParen :: args ++ [.punct .closeParen]
 
 def ContainerTest.hasUnchecked : ContainerTest → Bool
-  | .size _ => false
+  | .size .. => false
   | .style q => q.hasUnchecked StyleTest.hasUnchecked
-  | .scrollState q => q.hasUnchecked fun _ => false
+  | .scrollState q _ | .anchored q _ => q.hasUnchecked fun _ => false
 
 /-- `<container-condition>`: a container's name, a query, or both. -/
 structure ContainerCondition where

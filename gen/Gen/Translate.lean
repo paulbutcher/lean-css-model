@@ -153,11 +153,12 @@ def V.applyRange (r : Range) : V → V
   | .commaRep lo hi x => .commaRep lo hi (x.applyRange r)
   | .nonEmpty x => .nonEmpty (x.applyRange r)
 
-/-- A definition from the data, with the features it is scoped to. -/
+/-- A definition from the data, with the features it is scoped to. Its body is `none` when the
+data gives it only in prose, and an error when its syntax does not parse. -/
 structure Def where
   name : String
   scopes : List String
-  body : Option Term
+  body : Option (Except String Term)
   deriving Inhabited
 
 inductive Bracket where
@@ -275,12 +276,12 @@ def addVariant (v : Variant) : M Nat := do
   let key := variantKey v.css v.bracket v.owner v.canonical
   match (← get).variantKeys.get? key with
   | some i =>
-    let existing := (← get).variants[i]!
+    let some existing := (← get).variants[i]? | throw s!"variant {key} has no entry"
     -- Two inline uses in one definition, as in `minmax(A) | minmax(B)`, share a variant whose
     -- arguments are either.
     if existing.args != v.args && !v.canonical then
-      modify fun s => { s with variants := s.variants.set! i { existing with
-        args := .oneOf [existing.args, v.args], whole := false } }
+      modify fun s => { s with variants := s.variants.modify i fun e => { e with
+        args := .oneOf [e.args, v.args], whole := false } }
     return i
   | none =>
     let i := (← get).variants.size
@@ -298,7 +299,8 @@ def fnArgsOf (css : String) : Nat → Term → M (List (String × Term))
     | .ref name none =>
       match (← read).types.get? name with
       | some defs => match choose defs [] with
-        | some ⟨_, _, some t⟩ => fnArgsOf css fuel t
+        | some ⟨_, _, some (.ok t)⟩ => fnArgsOf css fuel t
+        | some ⟨_, _, some (.error e)⟩ => throw s!"{css}() is defined by <{name}>, whose syntax does not parse: {e}"
         | _ => throw s!"{css}() is defined by <{name}>, which has no syntax"
       | none => throw s!"{css}() is defined by unknown <{name}>"
     | _ => throw s!"{css}() has a definition other than alternatives of {css}( ... )"
@@ -341,7 +343,8 @@ def tr (ctx : Ctx) : Nat → Term → M V
       else
         match (← read).functions.get? name with
         | some defs => match choose defs ctx.scope with
-          | some ⟨_, scopes, some t⟩ =>
+          | some ⟨_, _, some (.error e)⟩ => narrow s!"<{name}()>'s syntax does not parse: {e}"
+          | some ⟨_, scopes, some (.ok t)⟩ =>
             let args ← try fnArgsOf name 20 t catch e => do
               let _ ← narrow e
               pure []
@@ -403,7 +406,8 @@ def trRef (ctx : Ctx) (fuel : Nat) (name : String) (range : Option (String × St
     | some t => pure t
     | none => match (← read).types.get? name with
       | some defs => match choose defs ctx.scope with
-        | some ⟨_, _, some t⟩ => pure t
+        | some ⟨_, _, some (.ok t)⟩ => pure t
+        | some ⟨_, _, some (.error e)⟩ => return ← narrow s!"<{name}>'s syntax does not parse: {e}"
         | some ⟨_, _, none⟩ => return ← narrow s!"<{name}> is defined in prose"
         | none => return ← narrow s!"unknown type <{name}>"
       | none => return ← narrow s!"unknown type <{name}>"
