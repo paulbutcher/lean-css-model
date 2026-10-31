@@ -1,0 +1,12 @@
+name = "gen"
+defaultTargets = ["generate"]
+
+[leanOptions]
+warningAsError = true
+
+[[lean_lib]]
+name = "Gen"
+
+[[lean_exe]]
+name = "generate"
+root = "Main"

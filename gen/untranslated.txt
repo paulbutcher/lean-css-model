@@ -1,0 +1,28 @@
+property -webkit-box-align: no syntax in the data
+property -webkit-box-flex: no syntax in the data
+property -webkit-box-ordinal-group: no syntax in the data
+property -webkit-box-orient: no syntax in the data
+property -webkit-box-pack: no syntax in the data
+function param() in : unsupported literal '#'
+selector :after: the legacy spelling of ::after
+selector :before: the legacy spelling of ::before
+selector :first-letter: the legacy spelling of ::first-letter
+selector :first-line: the legacy spelling of ::first-line
+selector :matches(): marked obsolete
+animation-range-center: <timeline-range-center-subject> is defined in prose; left to unchecked declarations
+animation-trigger: <animation-action> is defined in prose; left to unchecked declarations
+cue: <decibel> is defined in prose; left to unchecked declarations
+cue-after: <decibel> is defined in prose; left to unchecked declarations
+cue-before: <decibel> is defined in prose; left to unchecked declarations
+cursor: <url-set> is defined in prose; left to unchecked declarations
+glyph-orientation-vertical: the literal number 0deg; left to unchecked declarations
+glyph-orientation-vertical: the literal number 90deg; left to unchecked declarations
+glyph-orientation-vertical: the literal number 0; left to unchecked declarations
+glyph-orientation-vertical: the literal number 90; left to unchecked declarations
+nav-down: <target-name> is defined in prose; left to unchecked declarations
+nav-left: <target-name> is defined in prose; left to unchecked declarations
+nav-right: <target-name> is defined in prose; left to unchecked declarations
+nav-up: <target-name> is defined in prose; left to unchecked declarations
+voice-pitch: <semitones> is defined in prose; left to unchecked declarations
+voice-range: <semitones> is defined in prose; left to unchecked declarations
+voice-volume: <decibel> is defined in prose; left to unchecked declarations

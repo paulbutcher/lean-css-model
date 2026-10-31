@@ -1,0 +1,12 @@
+name = "bench"
+defaultTargets = ["CssModelBench"]
+
+[leanOptions]
+warningAsError = true
+
+[[require]]
+name = "css-model"
+path = ".."
+
+[[lean_lib]]
+name = "CssModelBench"

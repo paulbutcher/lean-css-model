@@ -1,0 +1,13 @@
+name = "test"
+defaultTargets = ["CssModelTests"]
+testDriver = "CssModelTests"
+
+[leanOptions]
+warningAsError = true
+
+[[require]]
+name = "css-model"
+path = ".."
+
+[[lean_lib]]
+name = "CssModelTests"
