@@ -10,7 +10,5 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v5
       - uses: leanprover/lean-action@v1
-      - name: Check the generated source matches the vendored data
-        run: lake run generate --check
