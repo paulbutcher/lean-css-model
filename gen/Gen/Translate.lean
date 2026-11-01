@@ -26,6 +26,9 @@ structure Atom where
   seps : List String := []
   simple : List String := []
   numeric : List (String × Range) := []
+  /-- Whether a `<custom-ident>` is admitted, by the key of the entry whose exclusions apply, empty
+  until the entry is translated. -/
+  customIdent : Option String := none
   deriving BEq, Repr, Inhabited, Hashable
 
 inductive V where
@@ -53,16 +56,18 @@ def insertSorted [Ord α] (x : α) : List α → List α
 
 def unionSorted [Ord α] (a b : List α) : List α := b.foldl (fun acc x => insertSorted x acc) a
 
-/-- The union of two symbols, unless a numeric type has a different range in each, which no one
-range could express. -/
+/-- The union of two symbols, unless a numeric type has a different range in each, or a
+`<custom-ident>` different exclusions, which no one symbol could express. -/
 def Atom.union (a b : Atom) : Option Atom :=
-  let clash := a.numeric.any fun (f, r) => b.numeric.any fun (g, s) => f == g && !(r == s)
+  let clash := a.numeric.any (fun (f, r) => b.numeric.any fun (g, s) => f == g && !(r == s)) ||
+    (a.customIdent.isSome && b.customIdent.isSome && a.customIdent != b.customIdent)
   if clash then none else some {
     keywords := unionSorted a.keywords b.keywords
     allKeywords := a.allKeywords || b.allKeywords
     functions := unionSorted a.functions b.functions
     seps := unionSorted a.seps b.seps
     simple := unionSorted a.simple b.simple
+    customIdent := a.customIdent <|> b.customIdent
     numeric := (b.numeric.foldl (fun acc (f, r) =>
       if acc.any (·.1 == f) then acc else acc ++ [(f, r)]) a.numeric).mergeSort (·.1 ≤ ·.1) }
 
@@ -226,9 +231,10 @@ def terminal : String → Option Atom
   | "zero" => some { simple := ["zero"] }
   | "string" | "string-token" => some { simple := ["string"] }
   | "url" => some { simple := ["url"] }
-  | "custom-ident" => some { simple := ["customIdent"] }
+  | "custom-ident" => some { customIdent := some "" }
   | "dashed-ident" | "custom-property-name" => some { simple := ["dashedIdent"] }
-  | "ident" | "ident-token" => some { simple := ["customIdent", "dashedIdent"], allKeywords := true }
+  | "ident" | "ident-token" =>
+    some { simple := ["dashedIdent"], allKeywords := true, customIdent := some "" }
   | "hex-color" => some { simple := ["hexColor"] }
   | "declaration-value" | "any-value" | "whole-value" => some { simple := ["tokens"] }
   | "unicode-range-token" => some { simple := ["unicodeRange"] }
@@ -419,7 +425,8 @@ def trRef (ctx : Ctx) (fuel : Nat) (name : String) (range : Option (String × St
       modify fun s => { s with ranges := s.ranges.push (f, r) }
     return x.applyRange r
   | none, .atom a =>
-    unless (← get).namedAtoms.any (·.1 == name) do
+    -- A symbol admitting a `<custom-ident>` differs by entry, so is never shared.
+    unless a.customIdent.isSome || (← get).namedAtoms.any (·.1 == name) do
       modify fun s => { s with namedAtoms := s.namedAtoms.push (name, a) }
     return x
   | none, x => return x
@@ -460,5 +467,45 @@ def translateVariants : M (List (String × String)) := do
       i := i + 1
     else break
   return failures
+
+/-- The keywords a level admits, or `none` if it admits every keyword. -/
+def V.keywords : V → Option (List String)
+  | .atom a => if a.allKeywords then none else some a.keywords
+  | .seq xs | .oneOf xs | .allOf xs | .someOf xs =>
+    xs.attach.foldl (fun acc ⟨x, _⟩ => do unionSorted (← acc) (← x.keywords)) (some [])
+  | .opt x | .star x | .plus x | .rep _ _ x | .atLeast _ x | .commaList x | .commaRep _ _ x
+  | .nonEmpty x => x.keywords
+
+def V.hasCustomIdent : V → Bool
+  | .atom a => a.customIdent.isSome
+  | .seq xs | .oneOf xs | .allOf xs | .someOf xs => xs.attach.any fun ⟨x, _⟩ => x.hasCustomIdent
+  | .opt x | .star x | .plus x | .rep _ _ x | .atLeast _ x | .commaList x | .commaRep _ _ x
+  | .nonEmpty x => x.hasCustomIdent
+
+/-- Every `<custom-ident>` of a level made subject to the exclusions of the entry `key`. -/
+def V.withExclusion (key : String) : V → V
+  | .atom a => .atom { a with customIdent := a.customIdent.map fun _ => key }
+  | .seq xs => .seq (xs.attach.map fun ⟨x, _⟩ => x.withExclusion key)
+  | .oneOf xs => .oneOf (xs.attach.map fun ⟨x, _⟩ => x.withExclusion key)
+  | .allOf xs => .allOf (xs.attach.map fun ⟨x, _⟩ => x.withExclusion key)
+  | .someOf xs => .someOf (xs.attach.map fun ⟨x, _⟩ => x.withExclusion key)
+  | .opt x => .opt (x.withExclusion key)
+  | .star x => .star (x.withExclusion key)
+  | .plus x => .plus (x.withExclusion key)
+  | .rep lo hi x => .rep lo hi (x.withExclusion key)
+  | .atLeast lo x => .atLeast lo (x.withExclusion key)
+  | .commaList x => .commaList (x.withExclusion key)
+  | .commaRep lo hi x => .commaRep lo hi (x.withExclusion key)
+  | .nonEmpty x => .nonEmpty (x.withExclusion key)
+
+/-- Translates an at-rule's prelude for the keywords it admits, discarding the functions,
+symbols and notes it would add, since the prelude is modelled by hand. -/
+def translatePrelude (name : String) (t : Term) : M (Except String V) := do
+  let saved ← get
+  let r ← translate name t
+  modify fun s => { s with
+    variants := saved.variants, variantKeys := saved.variantKeys, namedAtoms := saved.namedAtoms
+    ranges := saved.ranges, notes := saved.notes }
+  return r
 
 end Gen

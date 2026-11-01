@@ -90,6 +90,8 @@ structure Names where
   keywords : HashMap String String
   functions : Array String
   atoms : List (Atom × String)
+  /-- The Lean name of each entry's exclusions, by its key. -/
+  exclusions : HashMap String String := {}
 
 def atomLit (n : Names) (a : Atom) : String :=
   let kws := a.keywords.map fun k => "." ++ (n.keywords.getD k.toLower k)
@@ -103,7 +105,10 @@ def atomLit (n : Names) (a : Atom) : String :=
       [s!"seps := Sym.sepSet [{", ".intercalate (a.seps.map ("." ++ ·))}]"]) ++
     (if a.simple.isEmpty then [] else
       [s!"simple := Sym.simpleSet [{", ".intercalate (a.simple.map ("." ++ ·))}]"]) ++
-    a.numeric.map fun (f, r) => s!"{f} := some {rangeLit r}"
+    a.numeric.map (fun (f, r) => s!"{f} := some {rangeLit r}") ++
+    (match a.customIdent with
+      | some k => [s!"customIdent := some Exclusion.{n.exclusions.getD k s!"missing_{k}"}"]
+      | none => [])
   "{ " ++ ", ".intercalate fields ++ " }"
 
 def atomRef (n : Names) (a : Atom) : String :=
@@ -135,16 +140,17 @@ where
     else s!".{ctor} [\n{pad}" ++ s!",\n{pad}".intercalate items ++ "]"
 
 /-- `if i < mid then ... else ...` down to single entries, so that the kernel finds an entry in
-logarithmically many comparisons. -/
-def dispatch (leaf : Nat → String) (lo hi : Nat) (indent : Nat) : Nat → String
+logarithmically many comparisons. `below mid` is the test for entries before `mid`. -/
+def dispatch (leaf : Nat → String) (lo hi : Nat) (indent : Nat)
+    (below : Nat → String) : Nat → String
   | 0 => leaf lo
   | fuel + 1 =>
     if hi - lo ≤ 1 then leaf lo
     else
       let mid := (lo + hi) / 2
       let pad := String.ofList (List.replicate indent ' ')
-      s!"if i < {mid} then\n{pad}  " ++ dispatch leaf lo mid (indent + 2) fuel ++
-        s!"\n{pad}else\n{pad}  " ++ dispatch leaf mid hi (indent + 2) fuel
+      s!"if {below mid} then\n{pad}  " ++ dispatch leaf lo mid (indent + 2) below fuel ++
+        s!"\n{pad}else\n{pad}  " ++ dispatch leaf mid hi (indent + 2) below fuel
 
 /-- A type of named entries: an index proven in range, a constant for each entry, and its name.
 `extra` adds definitions inside the namespace. -/
@@ -168,7 +174,7 @@ def emitSyntax (type : String) (n : Names) (leanNames : List String) (vs : List 
   let count := leanNames.length
   let leaf := fun i => s!"{type}Syntax.{(leanNames[i]?.getD s!"missing{i}")}"
   s!"namespace {type}Syntax\n\n" ++ defs ++ s!"end {type}Syntax\n\n" ++
-  let body := if count == 0 then ".oneOf []" else dispatch leaf 0 count 2 64
+  let body := if count == 0 then ".oneOf []" else dispatch leaf 0 count 2 (s!"i < {·}") 64
   let param := if count ≤ 1 then "_" else "i"
   s!"def {type}.syntaxAt ({param} : Nat) : Vds :=\n  " ++ body ++ "\n\n" ++
   s!"def {type}.syntax (x : {type}) : Vds := {type}.syntaxAt x.id\n\n"

@@ -63,8 +63,8 @@ end Descriptor
 
 /-- A cascade layer's name: identifiers joined by `.`. -/
 structure LayerName where
-  first : Ident
-  rest : List Ident := []
+  first : CustomIdent Exclusion.atLayer
+  rest : List (CustomIdent Exclusion.atLayer) := []
   deriving Repr
 
 def LayerName.pieces (n : LayerName) : List Piece :=
@@ -99,7 +99,7 @@ def KeyframeSelector.pieces : KeyframeSelector → List Piece
   | .percent p _ => [.number p, .punct .percent]
 
 inductive KeyframesName where
-  | ident (n : CustomIdent)
+  | ident (n : CustomIdent Exclusion.atKeyframes)
   | string (s : String)
 
 def KeyframesName.pieces : KeyframesName → List Piece
@@ -163,7 +163,7 @@ def FeatureValueType.name : FeatureValueType → String
 
 /-- A name for one or more feature indices, as `@styleset { fancy: 2 4; }` gives. -/
 structure FontFeatureValue where
-  name : CustomIdent
+  name : CustomIdent CustomIdent.reserved
   index : Nat
   more : List Nat := []
 
@@ -174,15 +174,12 @@ inductive FeatureValuesItem where
 inductive FamilyName where
   | string (s : String)
   /-- An unquoted family name: one or more identifiers. -/
-  | idents (first : CustomIdent) (rest : List CustomIdent := [])
+  | idents (first : CustomIdent Exclusion.atFontFeatureValues)
+      (rest : List (CustomIdent Exclusion.atFontFeatureValues) := [])
 
 def FamilyName.pieces : FamilyName → List Piece
   | .string s => [.string s]
   | .idents f rest => joinPieces [.space] ((f :: rest).map fun i => [.ident i.name])
-
-/-- The names `@counter-style` may not define. -/
-def CounterStyleName.reserved : List String :=
-  ["none", "decimal", "disc", "square", "circle", "disclosure-open", "disclosure-closed"]
 
 inductive ColorProfileName where
   | dashed (n : DashedIdent)
@@ -342,8 +339,8 @@ inductive Rule where
   | keyframes (name : KeyframesName) (frames : List Keyframe) (webkit : Bool := false)
   | fontFace (descriptors : List (Descriptor FontFaceDescriptor))
   | fontFeatureValues (family : FamilyName) (more : List FamilyName) (items : List FeatureValuesItem)
-  | counterStyle (name : CustomIdent) (descriptors : List (Descriptor CounterStyleDescriptor))
-      (h : caselessIn name.name CounterStyleName.reserved = false := by decide +kernel)
+  | counterStyle (name : CustomIdent Exclusion.atCounterStyle)
+      (descriptors : List (Descriptor CounterStyleDescriptor))
   | property (name : DashedIdent) (descriptors : List (Descriptor PropertyDescriptor))
   | page (selectors : List PageSelector) (items : List PageItem)
   | fontPaletteValues (name : DashedIdent) (descriptors : List (Descriptor FontPaletteValuesDescriptor))
@@ -479,7 +476,7 @@ def Rule.pieces (depth : Nat) : Rule → List Piece
   | .fontFeatureValues f more items =>
     atRule "font-feature-values" (commaList ((f :: more).map FamilyName.pieces)) ++
       blockPieces depth (items.map (FeatureValuesItem.pieces (depth + 1)))
-  | .counterStyle name ds _ => atRule "counter-style" [.ident name.name] ++ blockPieces depth (descriptorItems ds)
+  | .counterStyle name ds => atRule "counter-style" [.ident name.name] ++ blockPieces depth (descriptorItems ds)
   | .property name ds => atRule "property" [.ident name.name] ++ blockPieces depth (descriptorItems ds)
   | .page sels items =>
     atRule "page" (commaList (sels.map PageSelector.pieces)) ++
@@ -588,7 +585,7 @@ def Rule.hasUnchecked : Rule → Bool
   | .fontFeatureValues _ _ items => items.any fun
     | .descriptor d => d.hasUnchecked
     | .block .. => false
-  | .counterStyle _ ds _ => descriptorsUnchecked ds
+  | .counterStyle _ ds => descriptorsUnchecked ds
   | .property _ ds => descriptorsUnchecked ds
   | .page _ items => items.any fun
     | .decl d => d.hasUnchecked

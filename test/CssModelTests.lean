@@ -6,6 +6,7 @@ module
 
 import CssModelTests.Escape
 import CssModelTests.Values
+import CssModelTests.CustomIdent
 import CssModelTests.Selectors
 import CssModelTests.Stylesheets
 import CssModelTests.Readme

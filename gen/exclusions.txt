@@ -1,0 +1,76 @@
+Each entry whose grammar admits a <custom-ident>, with the keywords it excludes besides default inherit initial revert revert-layer unset, and the section of any override.
+
+property -webkit-animation: alternate alternate-reverse auto backwards both ease ease-in ease-in-out ease-out forwards infinite linear none normal paused reverse running step-end step-start
+property -webkit-animation-name: none
+property -webkit-transition: all allow-discrete ease ease-in ease-in-out ease-out linear none normal step-end step-start
+property -webkit-transition-property: all none
+property animation: alternate alternate-reverse auto backwards both ease ease-in ease-in-out ease-out forwards infinite linear none normal paused reverse running step-end step-start
+property animation-name: none
+property color-scheme: dark light normal only
+property container: and inline-size none normal not or scroll-state size [css-conditional-5 §5.2]
+property container-name: and none not or [css-conditional-5 §5.2]
+property copy-into: content element none text
+property counter-increment: none
+property counter-reset: none
+property counter-set: none
+property flow-from: none
+property flow-into: auto content element none [css-regions-1 §3.1]
+property font: all-petite-caps all-small-caps bold bolder caption common-ligatures condensed contextual cursive diagonal-fractions discretionary-ligatures emoji expanded extra-condensed extra-expanded fantasy full-width historical-forms historical-ligatures icon italic jis04 jis78 jis83 jis90 large larger left lighter lining-nums math medium menu message-box monospace no-common-ligatures no-contextual no-discretionary-ligatures no-historical-ligatures none normal oblique oldstyle-nums ordinal petite-caps proportional-nums proportional-width right ruby sans-serif semi-condensed semi-expanded serif simplified slashed-zero small small-caps small-caption smaller stacked-fractions status-bar sub super system-ui tabular-nums text titling-caps traditional ui-monospace ui-rounded ui-sans-serif ui-serif ultra-condensed ultra-expanded unicase unicode x-large x-small xx-large xx-small xxx-large
+property font-family: caption cursive fantasy icon math menu message-box monospace sans-serif serif small-caption status-bar system-ui ui-monospace ui-rounded ui-sans-serif ui-serif [css-fonts-4 §2.1.1]
+property grid-area: auto span
+property grid-column: auto span
+property grid-column-end: auto span
+property grid-column-start: auto span
+property grid-row: auto span
+property grid-row-end: auto span
+property grid-row-start: auto span
+property list-style: inside none outside
+property list-style-type: none
+property page: auto
+property string-set: none
+property transition: all allow-discrete ease ease-in ease-in-out ease-out linear none normal step-end step-start
+property transition-property: all none
+property view-transition-class: none
+property view-transition-group: contain nearest normal
+property view-transition-name: auto match-element none [css-view-transitions-2 §3.1]
+property voice-family: child female male neutral old preserve young
+property will-change: all auto contents none scroll-position will-change [css-will-change-1 §2]
+descriptor @color-profile/components: every keyword
+descriptor @counter-style/additive-symbols: 
+descriptor @counter-style/fallback: none [css-counter-styles-3 §2.1]
+descriptor @counter-style/negative: 
+descriptor @counter-style/pad: 
+descriptor @counter-style/prefix: 
+descriptor @counter-style/speak-as: auto bullets none numbers spell-out words [css-counter-styles-3 §2.1]
+descriptor @counter-style/suffix: 
+descriptor @counter-style/symbols: 
+descriptor @counter-style/system: none [css-counter-styles-3 §2.1]
+descriptor @font-face/font-family: caption cursive fantasy icon math menu message-box monospace sans-serif serif small-caption status-bar system-ui ui-monospace ui-rounded ui-sans-serif ui-serif [css-fonts-4 §2.1.1]
+descriptor @font-palette-values/font-family: caption cursive fantasy icon math menu message-box monospace sans-serif serif small-caption status-bar system-ui ui-monospace ui-rounded ui-sans-serif ui-serif [css-fonts-4 §2.1.1]
+descriptor @view-transition/types: none
+function targetCounter: none [css-lists-3 §4]
+function targetCounters: none [css-lists-3 §4]
+function string: first first-except last start
+function counter: none [css-lists-3 §4]
+function counters: none [css-lists-3 §4]
+function reversed: none [css-lists-3 §4]
+function fontVariantStylistic: every keyword
+function fontVariantStyleset: every keyword
+function fontVariantCharacterVariant: every keyword
+function fontVariantSwash: every keyword
+function fontVariantOrnaments: every keyword
+function fontVariantAnnotation: every keyword
+function fontVariantAlternatesStylistic: every keyword
+function fontVariantAlternatesStyleset: every keyword
+function fontVariantAlternatesCharacterVariant: every keyword
+function fontVariantAlternatesSwash: every keyword
+function fontVariantAlternatesOrnaments: every keyword
+function fontVariantAlternatesAnnotation: every keyword
+function lineNames: auto span [css-grid-2 §7.2.2]
+function running: 
+function local: caption cursive fantasy icon math menu message-box monospace sans-serif serif small-caption status-bar system-ui ui-monospace ui-rounded ui-sans-serif ui-serif [css-fonts-4 §2.1.1, §4.3.3.1]
+prelude @keyframes: none [css-animations-1 §3]
+prelude @counter-style: circle decimal disc disclosure-closed disclosure-open none square [css-counter-styles-3 §2.1, §3]
+prelude @container: and none not or [css-conditional-5 §5.4]
+prelude @layer: ; admits default [css-cascade-5 §6.4.2]
+prelude @font-feature-values: caption cursive fantasy icon math menu message-box monospace sans-serif serif small-caption status-bar system-ui ui-monospace ui-rounded ui-sans-serif ui-serif [css-fonts-4 §2.1.1]

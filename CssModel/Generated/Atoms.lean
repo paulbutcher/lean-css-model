@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 -/
 module
 
-public import CssModel.Kind
+public import CssModel.Generated.Exclusions
 
 @[expose] public section
 
@@ -153,8 +153,6 @@ def spacingTrim : Sym := { keywords := Sym.keywordSet [.normal, .spaceAll, .spac
 def age : Sym := { keywords := Sym.keywordSet [.child, .old, .young] }
 
 def gender : Sym := { keywords := Sym.keywordSet [.female, .male, .neutral] }
-
-def symbol : Sym := { functions := Sym.functionSet [.image, .imageSet, .crossFade, .element, .linearGradient, .repeatingLinearGradient, .radialGradient, .repeatingRadialGradient, .conicGradient, .repeatingConicGradient], simple := Sym.simpleSet [.customIdent, .string, .url] }
 
 def pageSize : Sym := { keywords := Sym.keywordSet [.A3, .A4, .A5, .B4, .B5, .JISB4, .JISB5, .ledger, .legal, .letter] }
 

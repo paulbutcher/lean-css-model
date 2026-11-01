@@ -45,7 +45,7 @@ end ColorProfileDescriptor
 namespace ColorProfileDescriptorSyntax
 
 def components : Vds :=
-  .commaList (.atom { keywords := Keyword.allBits, simple := Sym.simpleSet [.customIdent, .dashedIdent] })
+  .commaList (.atom { keywords := Keyword.allBits, simple := Sym.simpleSet [.dashedIdent], customIdent := some Exclusion.colorProfileComponents })
 
 def renderingIntent : Vds :=
   .atom { keywords := Sym.keywordSet [.absoluteColorimetric, .perceptual, .relativeColorimetric, .saturation] }
@@ -274,19 +274,25 @@ end CounterStyleDescriptor
 namespace CounterStyleDescriptorSyntax
 
 def additiveSymbols : Vds :=
-  .commaList (.allOf [.atom { integer := some .nonneg }, .atom Atoms.symbol])
+  .commaList (.allOf [
+    .atom { integer := some .nonneg },
+    .atom { functions := Sym.functionSet [.image, .imageSet, .crossFade, .element, .linearGradient, .repeatingLinearGradient, .radialGradient, .repeatingRadialGradient, .conicGradient, .repeatingConicGradient], simple := Sym.simpleSet [.string, .url], customIdent := some Exclusion.counterStyleAdditiveSymbols }])
 
 def fallback : Vds :=
-  .atom { simple := Sym.simpleSet [.customIdent] }
+  .atom { customIdent := some Exclusion.counterStyleFallback }
 
 def negative : Vds :=
-  .seq [.atom Atoms.symbol, .opt (.atom Atoms.symbol)]
+  .seq [
+    .atom { functions := Sym.functionSet [.image, .imageSet, .crossFade, .element, .linearGradient, .repeatingLinearGradient, .radialGradient, .repeatingRadialGradient, .conicGradient, .repeatingConicGradient], simple := Sym.simpleSet [.string, .url], customIdent := some Exclusion.counterStyleNegative },
+    .opt (.atom { functions := Sym.functionSet [.image, .imageSet, .crossFade, .element, .linearGradient, .repeatingLinearGradient, .radialGradient, .repeatingRadialGradient, .conicGradient, .repeatingConicGradient], simple := Sym.simpleSet [.string, .url], customIdent := some Exclusion.counterStyleNegative })]
 
 def pad : Vds :=
-  .allOf [.atom { integer := some .nonneg }, .atom Atoms.symbol]
+  .allOf [
+    .atom { integer := some .nonneg },
+    .atom { functions := Sym.functionSet [.image, .imageSet, .crossFade, .element, .linearGradient, .repeatingLinearGradient, .radialGradient, .repeatingRadialGradient, .conicGradient, .repeatingConicGradient], simple := Sym.simpleSet [.string, .url], customIdent := some Exclusion.counterStylePad }]
 
 def «prefix» : Vds :=
-  .atom Atoms.symbol
+  .atom { functions := Sym.functionSet [.image, .imageSet, .crossFade, .element, .linearGradient, .repeatingLinearGradient, .radialGradient, .repeatingRadialGradient, .conicGradient, .repeatingConicGradient], simple := Sym.simpleSet [.string, .url], customIdent := some Exclusion.counterStylePrefix }
 
 def range : Vds :=
   .oneOf [
@@ -294,13 +300,13 @@ def range : Vds :=
     .commaList (.rep 2 2 (.atom { keywords := Sym.keywordSet [.infinite], integer := some .all }))]
 
 def speakAs : Vds :=
-  .atom { keywords := Sym.keywordSet [.auto, .bullets, .numbers, .spellOut, .words], simple := Sym.simpleSet [.customIdent] }
+  .atom { keywords := Sym.keywordSet [.auto, .bullets, .numbers, .spellOut, .words], customIdent := some Exclusion.counterStyleSpeakAs }
 
 def suffix : Vds :=
-  .atom Atoms.symbol
+  .atom { functions := Sym.functionSet [.image, .imageSet, .crossFade, .element, .linearGradient, .repeatingLinearGradient, .radialGradient, .repeatingRadialGradient, .conicGradient, .repeatingConicGradient], simple := Sym.simpleSet [.string, .url], customIdent := some Exclusion.counterStyleSuffix }
 
 def symbols : Vds :=
-  .plus (.atom Atoms.symbol)
+  .plus (.atom { functions := Sym.functionSet [.image, .imageSet, .crossFade, .element, .linearGradient, .repeatingLinearGradient, .radialGradient, .repeatingRadialGradient, .conicGradient, .repeatingConicGradient], simple := Sym.simpleSet [.string, .url], customIdent := some Exclusion.counterStyleSymbols })
 
 def system : Vds :=
   .oneOf [
@@ -310,7 +316,7 @@ def system : Vds :=
       .opt (.atom { integer := some .all })],
     .seq [
       .atom { keywords := Sym.keywordSet [.«extends»] },
-      .atom { simple := Sym.simpleSet [.customIdent] }]]
+      .atom { customIdent := some Exclusion.counterStyleSystem }]]
 
 end CounterStyleDescriptorSyntax
 
@@ -440,7 +446,7 @@ def fontDisplay : Vds :=
 def fontFamily : Vds :=
   .oneOf [
     .atom { simple := Sym.simpleSet [.string] },
-    .plus (.atom { simple := Sym.simpleSet [.customIdent] })]
+    .plus (.atom { customIdent := some Exclusion.fontFaceFontFamily })]
 
 def fontFeatureSettings : Vds :=
   .oneOf [
@@ -649,7 +655,7 @@ def basePalette : Vds :=
 def fontFamily : Vds :=
   .commaList (.oneOf [
     .atom { simple := Sym.simpleSet [.string] },
-    .plus (.atom { simple := Sym.simpleSet [.customIdent] })])
+    .plus (.atom { customIdent := some Exclusion.fontPaletteValuesFontFamily })])
 
 def overrideColors : Vds :=
   .commaList (.seq [
@@ -1298,7 +1304,7 @@ def navigation : Vds :=
 def types : Vds :=
   .oneOf [
     .atom { keywords := Sym.keywordSet [.none] },
-    .plus (.atom { simple := Sym.simpleSet [.customIdent] })]
+    .plus (.atom { customIdent := some Exclusion.viewTransitionTypes })]
 
 end ViewTransitionDescriptorSyntax
 

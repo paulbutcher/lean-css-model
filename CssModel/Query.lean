@@ -267,7 +267,7 @@ def ContainerTest.hasUnchecked : ContainerTest → Bool
 
 /-- `<container-condition>`: a container's name, a query, or both. -/
 structure ContainerCondition where
-  name : Option CustomIdent := none
+  name : Option (CustomIdent Exclusion.atContainer) := none
   query : Option (Cond ContainerTest) := none
   nonempty : (name.isSome || query.isSome) = true := by decide
 

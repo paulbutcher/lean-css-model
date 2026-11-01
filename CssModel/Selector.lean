@@ -211,9 +211,9 @@ inductive PseudoElementSelector : Bool → ElementKind → Type where
   | simple {has : Bool} (p : PseudoElement) : PseudoElementSelector has (.ofSimple p)
   | slotted {has : Bool} (c : Compound has false) : PseudoElementSelector has .slotted
   | part {has : Bool} (name : Ident) (more : List Ident := []) : PseudoElementSelector has .part
-  | highlight {has : Bool} (name : CustomIdent) : PseudoElementSelector has .other
+  | highlight {has : Bool} (name : CustomIdent CustomIdent.reserved) : PseudoElementSelector has .other
   /-- A view transition pseudo-element, of a named group or of every group. -/
-  | viewTransition {has : Bool} (part : ViewTransitionPart) (name : Option CustomIdent) :
+  | viewTransition {has : Bool} (part : ViewTransitionPart) (name : Option (CustomIdent CustomIdent.reserved)) :
       PseudoElementSelector has .other
   /-- A functional pseudo-element whose argument is not modelled, so is unchecked. -/
   | functional {has : Bool} (f : PseudoElementFunction) (args : TokenSeq) :

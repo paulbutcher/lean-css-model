@@ -57,7 +57,7 @@ def card : Rule := .style (cls "card") [
   .rule (.media [wide] [.decl (decl .padding [rem 2])])]
 
 def sheet : Stylesheet := {
-  preamble := [.layer { first := i "base" } [{ first := i "components" }],
+  preamble := [.layer { first := ⟨"base", by decide +kernel⟩ } [{ first := ⟨"components", by decide +kernel⟩ }],
     .import { url := "reset.css", layer := some none }]
   namespaces := [{ pre := some (i "svg"), url := "http://www.w3.org/2000/svg" }]
   rules := [card,
@@ -68,7 +68,7 @@ def sheet : Stylesheet := {
       desc FontFaceDescriptor.fontDisplay [kw .swap]],
     .property ⟨"--angle", by decide +kernel⟩ [desc PropertyDescriptor.syntax_ [str "<angle>"],
       desc PropertyDescriptor.inherits [kw .false]],
-    .layerStatement { first := i "utilities" } []] }
+    .layerStatement { first := ⟨"utilities", by decide +kernel⟩ } []] }
 
 #guard sheet.serialize .compact ==
   "@layer base,components;@import url(\"reset.css\") layer;@namespace svg url(\"http://www.w3.org/2000/svg\");" ++

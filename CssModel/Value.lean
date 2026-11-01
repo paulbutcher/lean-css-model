@@ -83,7 +83,7 @@ mutual
 /-- A component value, indexed by its kind. -/
 inductive Comp : Kind → Type where
   | keyword (k : Keyword) : Comp (.keyword k)
-  | ident (i : CustomIdent) : Comp (.simple .customIdent)
+  | ident {x : Nat} (i : CustomIdent x) : Comp (.customIdent x)
   | dashed (i : DashedIdent) : Comp (.simple .dashedIdent)
   | string (s : String) : Comp (.simple .string)
   | url (s : String) : Comp (.simple .url)
@@ -221,8 +221,12 @@ def GrammarValue.of {g : Regex Sym} (segs : List Seg)
 
 def kw (k : Keyword) : Comp (.keyword k) := .keyword k
 
-def ident (name : String)
-    (h : CustomIdent.allowed name = true := by decide +kernel) : Comp (.simple .customIdent) := .ident ⟨name, h⟩
+/-- A custom identifier. A literal is proven not to be any keyword but the one it is, if any, so
+that it is valid wherever that keyword is not excluded; a name held in a variable needs the
+keywords it excludes given, such as an entry's `Exclusion`, with a proof. -/
+def ident (name : String) (x : Nat := CustomIdent.excludable name)
+    (h : CustomIdent.admits x name = true := by decide +kernel) : Comp (.customIdent x) :=
+  .ident ⟨name, h⟩
 
 def dashed (name : String) (h : DashedIdent.allowed name = true := by decide +kernel) :
     Comp (.simple .dashedIdent) := .dashed ⟨name, h⟩
@@ -463,7 +467,7 @@ def Sep.text : Sep → String
   | .bar => "|" | .dollar => "$"
 
 def SimpleKind.describe : SimpleKind → String
-  | .customIdent => "<custom-ident>" | .dashedIdent => "<dashed-ident>" | .string => "<string>"
+  | .dashedIdent => "<dashed-ident>" | .string => "<string>"
   | .url => "<url>" | .hexColor => "<hex-color>" | .unicodeRange => "<unicode-range-token>"
   | .hash => "<hash-token>" | .tokens => "<declaration-value>" | .zero => "0"
   | .substitution => "var()"
@@ -490,7 +494,8 @@ def Sym.describe (s : Sym) : List String :=
         if h : i < Func.names.size then some (Func.describe ⟨i, h⟩) else none) ++
       ([Sep.comma, .slash, .colon, .semicolon, .plus, .minus, .star, .eq, .lt, .gt, .dot, .bar,
         .dollar].filter (s.seps.testBit ·.index)).map (s!"'{·.text}'") ++
-      ([SimpleKind.customIdent, .dashedIdent, .string, .url, .hexColor, .unicodeRange, .hash,
+      (if s.customIdent.isSome then ["<custom-ident>"] else []) ++
+      ([SimpleKind.dashedIdent, .string, .url, .hexColor, .unicodeRange, .hash,
         .tokens, .zero, .substitution].filter (s.simple.testBit ·.index)).map SimpleKind.describe ++
       numeric.filterMap fun (n, r) => r.map fun r => s!"<{n}{r.describe}>"
 

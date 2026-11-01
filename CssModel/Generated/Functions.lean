@@ -941,10 +941,10 @@ def targetCounter : Vds :=
     .seq [
       .atom Sym.comma,
       .seq [
-        .atom { simple := Sym.simpleSet [.customIdent] },
+        .atom { customIdent := some Exclusion.fnTargetCounter },
         .opt (.seq [
           .atom Sym.comma,
-          .nonEmpty (.opt (.atom { functions := Sym.functionSet [.symbols], simple := Sym.simpleSet [.customIdent] }))])]]]
+          .nonEmpty (.opt (.atom { functions := Sym.functionSet [.symbols], customIdent := some Exclusion.fnTargetCounter }))])]]]
 
 def targetCounters : Vds :=
   .seq [
@@ -952,14 +952,14 @@ def targetCounters : Vds :=
     .seq [
       .atom Sym.comma,
       .seq [
-        .atom { simple := Sym.simpleSet [.customIdent] },
+        .atom { customIdent := some Exclusion.fnTargetCounters },
         .seq [
           .atom Sym.comma,
           .seq [
             .atom { simple := Sym.simpleSet [.string] },
             .opt (.seq [
               .atom Sym.comma,
-              .nonEmpty (.opt (.atom { functions := Sym.functionSet [.symbols], simple := Sym.simpleSet [.customIdent] }))])]]]]]
+              .nonEmpty (.opt (.atom { functions := Sym.functionSet [.symbols], customIdent := some Exclusion.fnTargetCounters }))])]]]]]
 
 def targetText : Vds :=
   .seq [
@@ -970,7 +970,7 @@ def targetText : Vds :=
 
 def string : Vds :=
   .seq [
-    .atom { simple := Sym.simpleSet [.customIdent] },
+    .atom { customIdent := some Exclusion.fnString },
     .opt (.seq [
       .atom Sym.comma,
       .nonEmpty (.opt (.atom { keywords := Sym.keywordSet [.first, .firstExcept, .last, .start] }))])]
@@ -980,21 +980,21 @@ def content : Vds :=
 
 def counter : Vds :=
   .seq [
-    .atom { simple := Sym.simpleSet [.customIdent] },
+    .atom { customIdent := some Exclusion.fnCounter },
     .opt (.seq [
       .atom Sym.comma,
-      .nonEmpty (.opt (.atom { functions := Sym.functionSet [.symbols], simple := Sym.simpleSet [.customIdent] }))])]
+      .nonEmpty (.opt (.atom { functions := Sym.functionSet [.symbols], customIdent := some Exclusion.fnCounter }))])]
 
 def counters : Vds :=
   .seq [
-    .atom { simple := Sym.simpleSet [.customIdent] },
+    .atom { customIdent := some Exclusion.fnCounters },
     .seq [
       .atom Sym.comma,
       .seq [
         .atom { simple := Sym.simpleSet [.string] },
         .opt (.seq [
           .atom Sym.comma,
-          .nonEmpty (.opt (.atom { functions := Sym.functionSet [.symbols], simple := Sym.simpleSet [.customIdent] }))])]]]
+          .nonEmpty (.opt (.atom { functions := Sym.functionSet [.symbols], customIdent := some Exclusion.fnCounters }))])]]]
 
 def stripes : Vds :=
   .commaList (.allOf [
@@ -1586,7 +1586,7 @@ def superellipse : Vds :=
   .atom { keywords := Sym.keywordSet [.«-infinity», .infinity], number := some .all }
 
 def reversed : Vds :=
-  .atom { simple := Sym.simpleSet [.customIdent] }
+  .atom { customIdent := some Exclusion.fnReversed }
 
 def dynamicRangeLimitMix : Vds :=
   .commaList (.allOf [
@@ -1668,43 +1668,43 @@ def paletteMix : Vds :=
       .opt (.atom { percentage := some { lo := some 0, hi := some 100 } })])]
 
 def fontVariantStylistic : Vds :=
-  .atom { keywords := Keyword.allBits, simple := Sym.simpleSet [.customIdent, .dashedIdent] }
+  .atom { keywords := Keyword.allBits, simple := Sym.simpleSet [.dashedIdent], customIdent := some Exclusion.fnFontVariantStylistic }
 
 def fontVariantStyleset : Vds :=
-  .commaList (.atom { keywords := Keyword.allBits, simple := Sym.simpleSet [.customIdent, .dashedIdent] })
+  .commaList (.atom { keywords := Keyword.allBits, simple := Sym.simpleSet [.dashedIdent], customIdent := some Exclusion.fnFontVariantStyleset })
 
 def fontVariantCharacterVariant : Vds :=
-  .commaList (.atom { keywords := Keyword.allBits, simple := Sym.simpleSet [.customIdent, .dashedIdent] })
+  .commaList (.atom { keywords := Keyword.allBits, simple := Sym.simpleSet [.dashedIdent], customIdent := some Exclusion.fnFontVariantCharacterVariant })
 
 def fontVariantSwash : Vds :=
-  .atom { keywords := Keyword.allBits, simple := Sym.simpleSet [.customIdent, .dashedIdent] }
+  .atom { keywords := Keyword.allBits, simple := Sym.simpleSet [.dashedIdent], customIdent := some Exclusion.fnFontVariantSwash }
 
 def fontVariantOrnaments : Vds :=
-  .atom { keywords := Keyword.allBits, simple := Sym.simpleSet [.customIdent, .dashedIdent] }
+  .atom { keywords := Keyword.allBits, simple := Sym.simpleSet [.dashedIdent], customIdent := some Exclusion.fnFontVariantOrnaments }
 
 def fontVariantAnnotation : Vds :=
-  .atom { keywords := Keyword.allBits, simple := Sym.simpleSet [.customIdent, .dashedIdent] }
+  .atom { keywords := Keyword.allBits, simple := Sym.simpleSet [.dashedIdent], customIdent := some Exclusion.fnFontVariantAnnotation }
 
 def fontVariantAlternatesStylistic : Vds :=
-  .atom { keywords := Keyword.allBits, simple := Sym.simpleSet [.customIdent, .dashedIdent] }
+  .atom { keywords := Keyword.allBits, simple := Sym.simpleSet [.dashedIdent], customIdent := some Exclusion.fnFontVariantAlternatesStylistic }
 
 def fontVariantAlternatesStyleset : Vds :=
-  .commaList (.atom { keywords := Keyword.allBits, simple := Sym.simpleSet [.customIdent, .dashedIdent] })
+  .commaList (.atom { keywords := Keyword.allBits, simple := Sym.simpleSet [.dashedIdent], customIdent := some Exclusion.fnFontVariantAlternatesStyleset })
 
 def fontVariantAlternatesCharacterVariant : Vds :=
-  .commaList (.atom { keywords := Keyword.allBits, simple := Sym.simpleSet [.customIdent, .dashedIdent] })
+  .commaList (.atom { keywords := Keyword.allBits, simple := Sym.simpleSet [.dashedIdent], customIdent := some Exclusion.fnFontVariantAlternatesCharacterVariant })
 
 def fontVariantAlternatesSwash : Vds :=
-  .atom { keywords := Keyword.allBits, simple := Sym.simpleSet [.customIdent, .dashedIdent] }
+  .atom { keywords := Keyword.allBits, simple := Sym.simpleSet [.dashedIdent], customIdent := some Exclusion.fnFontVariantAlternatesSwash }
 
 def fontVariantAlternatesOrnaments : Vds :=
-  .atom { keywords := Keyword.allBits, simple := Sym.simpleSet [.customIdent, .dashedIdent] }
+  .atom { keywords := Keyword.allBits, simple := Sym.simpleSet [.dashedIdent], customIdent := some Exclusion.fnFontVariantAlternatesOrnaments }
 
 def fontVariantAlternatesAnnotation : Vds :=
-  .atom { keywords := Keyword.allBits, simple := Sym.simpleSet [.customIdent, .dashedIdent] }
+  .atom { keywords := Keyword.allBits, simple := Sym.simpleSet [.dashedIdent], customIdent := some Exclusion.fnFontVariantAlternatesAnnotation }
 
 def lineNames : Vds :=
-  .star (.atom { simple := Sym.simpleSet [.customIdent] })
+  .star (.atom { customIdent := some Exclusion.fnLineNames })
 
 def trackSizeMinmax : Vds :=
   .seq [
@@ -1928,7 +1928,7 @@ def ray : Vds :=
           .atom { length := some .all, percentage := some .all }])]])]
 
 def running : Vds :=
-  .atom { simple := Sym.simpleSet [.customIdent] }
+  .atom { customIdent := some Exclusion.fnRunning }
 
 def fade : Vds :=
   .atom { length := some .all, percentage := some .all }
@@ -1955,7 +1955,7 @@ def tech : Vds :=
 def «local» : Vds :=
   .oneOf [
     .atom { simple := Sym.simpleSet [.string] },
-    .plus (.atom { simple := Sym.simpleSet [.customIdent] })]
+    .plus (.atom { customIdent := some Exclusion.fnLocal })]
 
 def wcag2 : Vds :=
   .oneOf [

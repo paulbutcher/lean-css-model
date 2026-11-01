@@ -2525,7 +2525,7 @@ def webkitAnimation : Vds :=
     .atom Atoms.singleAnimationDirection,
     .atom Atoms.singleAnimationFillMode,
     .atom { keywords := Sym.keywordSet [.paused, .running] },
-    .atom { keywords := Sym.keywordSet [.none], simple := Sym.simpleSet [.customIdent, .string] },
+    .atom { keywords := Sym.keywordSet [.none], simple := Sym.simpleSet [.string], customIdent := some Exclusion.webkitAnimation },
     .atom Atoms.singleAnimationTimeline])
 
 def webkitAnimationDelay : Vds :=
@@ -2544,7 +2544,7 @@ def webkitAnimationIterationCount : Vds :=
   .commaList (.atom { keywords := Sym.keywordSet [.infinite], number := some .nonneg })
 
 def webkitAnimationName : Vds :=
-  .commaList (.atom { keywords := Sym.keywordSet [.none], simple := Sym.simpleSet [.customIdent, .string] })
+  .commaList (.atom { keywords := Sym.keywordSet [.none], simple := Sym.simpleSet [.string], customIdent := some Exclusion.webkitAnimationName })
 
 def webkitAnimationPlayState : Vds :=
   .commaList (.atom { keywords := Sym.keywordSet [.paused, .running] })
@@ -2886,7 +2886,7 @@ def webkitTransformStyle : Vds :=
 
 def webkitTransition : Vds :=
   .commaList (.someOf [
-    .atom { keywords := Sym.keywordSet [.all, .none], simple := Sym.simpleSet [.customIdent] },
+    .atom { keywords := Sym.keywordSet [.all, .none], customIdent := some Exclusion.webkitTransition },
     .atom { time := some .all },
     .atom Atoms.easingFunction,
     .atom { time := some .all },
@@ -2901,7 +2901,7 @@ def webkitTransitionDuration : Vds :=
 def webkitTransitionProperty : Vds :=
   .oneOf [
     .atom { keywords := Sym.keywordSet [.none] },
-    .commaList (.atom { keywords := Sym.keywordSet [.all], simple := Sym.simpleSet [.customIdent] })]
+    .commaList (.atom { keywords := Sym.keywordSet [.all], customIdent := some Exclusion.webkitTransitionProperty })]
 
 def webkitTransitionTimingFunction : Vds :=
   .commaList (.atom Atoms.easingFunction)
@@ -2967,7 +2967,7 @@ def animation : Vds :=
     .atom Atoms.singleAnimationDirection,
     .atom Atoms.singleAnimationFillMode,
     .atom { keywords := Sym.keywordSet [.paused, .running] },
-    .atom { keywords := Sym.keywordSet [.none], simple := Sym.simpleSet [.customIdent, .string] },
+    .atom { keywords := Sym.keywordSet [.none], simple := Sym.simpleSet [.string], customIdent := some Exclusion.animation },
     .atom Atoms.singleAnimationTimeline])
 
 def animationComposition : Vds :=
@@ -2997,7 +2997,7 @@ def animationIterationCount : Vds :=
   .commaList (.atom { keywords := Sym.keywordSet [.infinite], number := some .nonneg })
 
 def animationName : Vds :=
-  .commaList (.atom { keywords := Sym.keywordSet [.none], simple := Sym.simpleSet [.customIdent, .string] })
+  .commaList (.atom { keywords := Sym.keywordSet [.none], simple := Sym.simpleSet [.string], customIdent := some Exclusion.animationName })
 
 def animationPlayState : Vds :=
   .commaList (.atom { keywords := Sym.keywordSet [.paused, .running] })
@@ -3947,7 +3947,7 @@ def colorScheme : Vds :=
   .oneOf [
     .atom { keywords := Sym.keywordSet [.normal] },
     .allOf [
-      .plus (.atom { keywords := Sym.keywordSet [.dark, .light], simple := Sym.simpleSet [.customIdent] }),
+      .plus (.atom { keywords := Sym.keywordSet [.dark, .light], customIdent := some Exclusion.colorScheme }),
       .opt (.atom { keywords := Sym.keywordSet [.«only»] })]]
 
 def columnCount : Vds :=
@@ -4143,7 +4143,7 @@ def container : Vds :=
   .seq [
     .oneOf [
       .atom { keywords := Sym.keywordSet [.none] },
-      .plus (.atom { simple := Sym.simpleSet [.customIdent] })],
+      .plus (.atom { customIdent := some Exclusion.container })],
     .opt (.seq [
       .atom { seps := Sym.sepSet [.slash] },
       .oneOf [
@@ -4155,7 +4155,7 @@ def container : Vds :=
 def containerName : Vds :=
   .oneOf [
     .atom { keywords := Sym.keywordSet [.none] },
-    .plus (.atom { simple := Sym.simpleSet [.customIdent] })]
+    .plus (.atom { customIdent := some Exclusion.containerName })]
 
 def containerType : Vds :=
   .oneOf [
@@ -4186,11 +4186,11 @@ def copyInto : Vds :=
     .atom { keywords := Sym.keywordSet [.none] },
     .opt (.seq [
       .seq [
-        .atom { simple := Sym.simpleSet [.customIdent] },
+        .atom { customIdent := some Exclusion.copyInto },
         .atom Atoms.contentLevel],
       .star (.seq [
         .atom Sym.comma,
-        .atom { simple := Sym.simpleSet [.customIdent] },
+        .atom { customIdent := some Exclusion.copyInto },
         .atom Atoms.contentLevel])])]
 
 def corner : Vds :=
@@ -4417,7 +4417,7 @@ def counterIncrement : Vds :=
   .oneOf [
     .atom { keywords := Sym.keywordSet [.none] },
     .plus (.seq [
-      .atom { simple := Sym.simpleSet [.customIdent] },
+      .atom { customIdent := some Exclusion.counterIncrement },
       .opt (.atom { integer := some .all })])]
 
 def counterReset : Vds :=
@@ -4425,7 +4425,7 @@ def counterReset : Vds :=
     .atom { keywords := Sym.keywordSet [.none] },
     .plus (.oneOf [
       .seq [
-        .atom { simple := Sym.simpleSet [.customIdent] },
+        .atom { customIdent := some Exclusion.counterReset },
         .opt (.atom { integer := some .all })],
       .seq [
         .atom { functions := Sym.functionSet [.reversed] },
@@ -4435,7 +4435,7 @@ def counterSet : Vds :=
   .oneOf [
     .atom { keywords := Sym.keywordSet [.none] },
     .plus (.seq [
-      .atom { simple := Sym.simpleSet [.customIdent] },
+      .atom { customIdent := some Exclusion.counterSet },
       .opt (.atom { integer := some .all })])]
 
 def cue : Vds :=
@@ -4660,13 +4660,13 @@ def floodOpacity : Vds :=
   .atom { number := some .all, percentage := some .all }
 
 def flowFrom : Vds :=
-  .atom { keywords := Sym.keywordSet [.none], simple := Sym.simpleSet [.customIdent] }
+  .atom { keywords := Sym.keywordSet [.none], customIdent := some Exclusion.flowFrom }
 
 def flowInto : Vds :=
   .oneOf [
     .atom { keywords := Sym.keywordSet [.none] },
     .seq [
-      .atom { simple := Sym.simpleSet [.customIdent] },
+      .atom { customIdent := some Exclusion.flowInto },
       .opt (.atom { keywords := Sym.keywordSet [.content, .element] })]]
 
 def font : Vds :=
@@ -4688,12 +4688,12 @@ def font : Vds :=
         .atom { keywords := Sym.keywordSet [.normal], length := some .nonneg, number := some .nonneg, percentage := some .nonneg }]),
       .commaList (.commaList (.oneOf [
         .atom { keywords := Sym.keywordSet [.cursive, .fantasy, .math, .monospace, .sansSerif, .serif, .systemUi, .uiMonospace, .uiRounded, .uiSansSerif, .uiSerif], functions := Sym.functionSet [.generic], simple := Sym.simpleSet [.string] },
-        .plus (.atom { simple := Sym.simpleSet [.customIdent] })]))]]
+        .plus (.atom { customIdent := some Exclusion.font })]))]]
 
 def fontFamily : Vds :=
   .commaList (.oneOf [
     .atom { keywords := Sym.keywordSet [.cursive, .fantasy, .math, .monospace, .sansSerif, .serif, .systemUi, .uiMonospace, .uiRounded, .uiSansSerif, .uiSerif], functions := Sym.functionSet [.generic], simple := Sym.simpleSet [.string] },
-    .plus (.atom { simple := Sym.simpleSet [.customIdent] })])
+    .plus (.atom { customIdent := some Exclusion.fontFamily })])
 
 def fontFeatureSettings : Vds :=
   .oneOf [
@@ -4981,31 +4981,31 @@ def grid : Vds :=
 def gridArea : Vds :=
   .seq [
     .oneOf [
-      .atom { keywords := Sym.keywordSet [.auto], simple := Sym.simpleSet [.customIdent] },
+      .atom { keywords := Sym.keywordSet [.auto], customIdent := some Exclusion.gridArea },
       .allOf [
         .oneOf [
           .atom { integer := some { hi := some (-1) } },
           .atom { integer := some { lo := some 1 } }],
-        .opt (.atom { simple := Sym.simpleSet [.customIdent] })],
+        .opt (.atom { customIdent := some Exclusion.gridArea })],
       .allOf [
         .atom { keywords := Sym.keywordSet [.span] },
         .someOf [
           .atom { integer := some { lo := some 1 } },
-          .atom { simple := Sym.simpleSet [.customIdent] }]]],
+          .atom { customIdent := some Exclusion.gridArea }]]],
     .rep 0 3 (.seq [
       .atom { seps := Sym.sepSet [.slash] },
       .oneOf [
-        .atom { keywords := Sym.keywordSet [.auto], simple := Sym.simpleSet [.customIdent] },
+        .atom { keywords := Sym.keywordSet [.auto], customIdent := some Exclusion.gridArea },
         .allOf [
           .oneOf [
             .atom { integer := some { hi := some (-1) } },
             .atom { integer := some { lo := some 1 } }],
-          .opt (.atom { simple := Sym.simpleSet [.customIdent] })],
+          .opt (.atom { customIdent := some Exclusion.gridArea })],
         .allOf [
           .atom { keywords := Sym.keywordSet [.span] },
           .someOf [
             .atom { integer := some { lo := some 1 } },
-            .atom { simple := Sym.simpleSet [.customIdent] }]]]])]
+            .atom { customIdent := some Exclusion.gridArea }]]]])]
 
 def gridAutoColumns : Vds :=
   .plus (.atom Atoms.trackSize)
@@ -5021,62 +5021,62 @@ def gridAutoRows : Vds :=
 def gridColumn : Vds :=
   .seq [
     .oneOf [
-      .atom { keywords := Sym.keywordSet [.auto], simple := Sym.simpleSet [.customIdent] },
+      .atom { keywords := Sym.keywordSet [.auto], customIdent := some Exclusion.gridColumn },
       .allOf [
         .oneOf [
           .atom { integer := some { hi := some (-1) } },
           .atom { integer := some { lo := some 1 } }],
-        .opt (.atom { simple := Sym.simpleSet [.customIdent] })],
+        .opt (.atom { customIdent := some Exclusion.gridColumn })],
       .allOf [
         .atom { keywords := Sym.keywordSet [.span] },
         .someOf [
           .atom { integer := some { lo := some 1 } },
-          .atom { simple := Sym.simpleSet [.customIdent] }]]],
+          .atom { customIdent := some Exclusion.gridColumn }]]],
     .opt (.seq [
       .atom { seps := Sym.sepSet [.slash] },
       .oneOf [
-        .atom { keywords := Sym.keywordSet [.auto], simple := Sym.simpleSet [.customIdent] },
+        .atom { keywords := Sym.keywordSet [.auto], customIdent := some Exclusion.gridColumn },
         .allOf [
           .oneOf [
             .atom { integer := some { hi := some (-1) } },
             .atom { integer := some { lo := some 1 } }],
-          .opt (.atom { simple := Sym.simpleSet [.customIdent] })],
+          .opt (.atom { customIdent := some Exclusion.gridColumn })],
         .allOf [
           .atom { keywords := Sym.keywordSet [.span] },
           .someOf [
             .atom { integer := some { lo := some 1 } },
-            .atom { simple := Sym.simpleSet [.customIdent] }]]]])]
+            .atom { customIdent := some Exclusion.gridColumn }]]]])]
 
 def gridColumnEnd : Vds :=
   .oneOf [
-    .atom { keywords := Sym.keywordSet [.auto], simple := Sym.simpleSet [.customIdent] },
+    .atom { keywords := Sym.keywordSet [.auto], customIdent := some Exclusion.gridColumnEnd },
     .allOf [
       .oneOf [
         .atom { integer := some { hi := some (-1) } },
         .atom { integer := some { lo := some 1 } }],
-      .opt (.atom { simple := Sym.simpleSet [.customIdent] })],
+      .opt (.atom { customIdent := some Exclusion.gridColumnEnd })],
     .allOf [
       .atom { keywords := Sym.keywordSet [.span] },
       .someOf [
         .atom { integer := some { lo := some 1 } },
-        .atom { simple := Sym.simpleSet [.customIdent] }]]]
+        .atom { customIdent := some Exclusion.gridColumnEnd }]]]
 
 def gridColumnGap : Vds :=
   .atom { keywords := Sym.keywordSet [.hairline, .medium, .normal, .thick, .thin], length := some .nonneg, percentage := some .nonneg }
 
 def gridColumnStart : Vds :=
   .oneOf [
-    .atom { keywords := Sym.keywordSet [.auto], simple := Sym.simpleSet [.customIdent] },
+    .atom { keywords := Sym.keywordSet [.auto], customIdent := some Exclusion.gridColumnStart },
     .allOf [
       .oneOf [
         .atom { integer := some { hi := some (-1) } },
         .atom { integer := some { lo := some 1 } }],
-      .opt (.atom { simple := Sym.simpleSet [.customIdent] })],
+      .opt (.atom { customIdent := some Exclusion.gridColumnStart })],
     .allOf [
       .atom { keywords := Sym.keywordSet [.span] },
       .someOf [
         .atom { integer := some { lo := some 1 } },
-        .atom { simple := Sym.simpleSet [.customIdent] }]]]
+        .atom { customIdent := some Exclusion.gridColumnStart }]]]
 
 def gridGap : Vds :=
   .seq [
@@ -5086,62 +5086,62 @@ def gridGap : Vds :=
 def gridRow : Vds :=
   .seq [
     .oneOf [
-      .atom { keywords := Sym.keywordSet [.auto], simple := Sym.simpleSet [.customIdent] },
+      .atom { keywords := Sym.keywordSet [.auto], customIdent := some Exclusion.gridRow },
       .allOf [
         .oneOf [
           .atom { integer := some { hi := some (-1) } },
           .atom { integer := some { lo := some 1 } }],
-        .opt (.atom { simple := Sym.simpleSet [.customIdent] })],
+        .opt (.atom { customIdent := some Exclusion.gridRow })],
       .allOf [
         .atom { keywords := Sym.keywordSet [.span] },
         .someOf [
           .atom { integer := some { lo := some 1 } },
-          .atom { simple := Sym.simpleSet [.customIdent] }]]],
+          .atom { customIdent := some Exclusion.gridRow }]]],
     .opt (.seq [
       .atom { seps := Sym.sepSet [.slash] },
       .oneOf [
-        .atom { keywords := Sym.keywordSet [.auto], simple := Sym.simpleSet [.customIdent] },
+        .atom { keywords := Sym.keywordSet [.auto], customIdent := some Exclusion.gridRow },
         .allOf [
           .oneOf [
             .atom { integer := some { hi := some (-1) } },
             .atom { integer := some { lo := some 1 } }],
-          .opt (.atom { simple := Sym.simpleSet [.customIdent] })],
+          .opt (.atom { customIdent := some Exclusion.gridRow })],
         .allOf [
           .atom { keywords := Sym.keywordSet [.span] },
           .someOf [
             .atom { integer := some { lo := some 1 } },
-            .atom { simple := Sym.simpleSet [.customIdent] }]]]])]
+            .atom { customIdent := some Exclusion.gridRow }]]]])]
 
 def gridRowEnd : Vds :=
   .oneOf [
-    .atom { keywords := Sym.keywordSet [.auto], simple := Sym.simpleSet [.customIdent] },
+    .atom { keywords := Sym.keywordSet [.auto], customIdent := some Exclusion.gridRowEnd },
     .allOf [
       .oneOf [
         .atom { integer := some { hi := some (-1) } },
         .atom { integer := some { lo := some 1 } }],
-      .opt (.atom { simple := Sym.simpleSet [.customIdent] })],
+      .opt (.atom { customIdent := some Exclusion.gridRowEnd })],
     .allOf [
       .atom { keywords := Sym.keywordSet [.span] },
       .someOf [
         .atom { integer := some { lo := some 1 } },
-        .atom { simple := Sym.simpleSet [.customIdent] }]]]
+        .atom { customIdent := some Exclusion.gridRowEnd }]]]
 
 def gridRowGap : Vds :=
   .atom { keywords := Sym.keywordSet [.hairline, .medium, .normal, .thick, .thin], length := some .nonneg, percentage := some .nonneg }
 
 def gridRowStart : Vds :=
   .oneOf [
-    .atom { keywords := Sym.keywordSet [.auto], simple := Sym.simpleSet [.customIdent] },
+    .atom { keywords := Sym.keywordSet [.auto], customIdent := some Exclusion.gridRowStart },
     .allOf [
       .oneOf [
         .atom { integer := some { hi := some (-1) } },
         .atom { integer := some { lo := some 1 } }],
-      .opt (.atom { simple := Sym.simpleSet [.customIdent] })],
+      .opt (.atom { customIdent := some Exclusion.gridRowStart })],
     .allOf [
       .atom { keywords := Sym.keywordSet [.span] },
       .someOf [
         .atom { integer := some { lo := some 1 } },
-        .atom { simple := Sym.simpleSet [.customIdent] }]]]
+        .atom { customIdent := some Exclusion.gridRowStart }]]]
 
 def gridTemplate : Vds :=
   .oneOf [
@@ -5450,7 +5450,7 @@ def listStyle : Vds :=
   .someOf [
     .atom { keywords := Sym.keywordSet [.inside, .outside] },
     .atom Atoms.maskReference,
-    .atom { keywords := Sym.keywordSet [.none], functions := Sym.functionSet [.symbols], simple := Sym.simpleSet [.customIdent, .string] }]
+    .atom { keywords := Sym.keywordSet [.none], functions := Sym.functionSet [.symbols], simple := Sym.simpleSet [.string], customIdent := some Exclusion.listStyle }]
 
 def listStyleImage : Vds :=
   .atom Atoms.maskReference
@@ -5459,7 +5459,7 @@ def listStylePosition : Vds :=
   .atom { keywords := Sym.keywordSet [.inside, .outside] }
 
 def listStyleType : Vds :=
-  .atom { keywords := Sym.keywordSet [.none], functions := Sym.functionSet [.symbols], simple := Sym.simpleSet [.customIdent, .string] }
+  .atom { keywords := Sym.keywordSet [.none], functions := Sym.functionSet [.symbols], simple := Sym.simpleSet [.string], customIdent := some Exclusion.listStyleType }
 
 def margin : Vds :=
   .rep 1 4 (.atom { keywords := Sym.keywordSet [.auto], functions := Sym.functionSet [.anchorSize], length := some .all, percentage := some .all })
@@ -6068,7 +6068,7 @@ def paddingTop : Vds :=
   .atom { length := some .nonneg, percentage := some .nonneg }
 
 def page : Vds :=
-  .atom { keywords := Sym.keywordSet [.auto], simple := Sym.simpleSet [.customIdent] }
+  .atom { keywords := Sym.keywordSet [.auto], customIdent := some Exclusion.page }
 
 def pageBreakAfter : Vds :=
   .atom { keywords := Sym.keywordSet [.always, .auto, .avoid, .inherit, .left, .right] }
@@ -6817,7 +6817,7 @@ def stringSet : Vds :=
   .oneOf [
     .atom { keywords := Sym.keywordSet [.none] },
     .commaList (.seq [
-      .atom { simple := Sym.simpleSet [.customIdent] },
+      .atom { customIdent := some Exclusion.stringSet },
       .plus (.atom { simple := Sym.simpleSet [.string] })])]
 
 def stroke : Vds :=
@@ -7341,7 +7341,7 @@ def transformStyle : Vds :=
 
 def transition : Vds :=
   .commaList (.someOf [
-    .atom { keywords := Sym.keywordSet [.all, .none], simple := Sym.simpleSet [.customIdent] },
+    .atom { keywords := Sym.keywordSet [.all, .none], customIdent := some Exclusion.transition },
     .atom { time := some .all },
     .atom Atoms.easingFunction,
     .atom { time := some .all },
@@ -7359,7 +7359,7 @@ def transitionDuration : Vds :=
 def transitionProperty : Vds :=
   .oneOf [
     .atom { keywords := Sym.keywordSet [.none] },
-    .commaList (.atom { keywords := Sym.keywordSet [.all], simple := Sym.simpleSet [.customIdent] })]
+    .commaList (.atom { keywords := Sym.keywordSet [.all], customIdent := some Exclusion.transitionProperty })]
 
 def transitionTimingFunction : Vds :=
   .commaList (.atom Atoms.easingFunction)
@@ -7412,13 +7412,13 @@ def viewTimelineName : Vds :=
 def viewTransitionClass : Vds :=
   .oneOf [
     .atom { keywords := Sym.keywordSet [.none] },
-    .plus (.atom { simple := Sym.simpleSet [.customIdent] })]
+    .plus (.atom { customIdent := some Exclusion.viewTransitionClass })]
 
 def viewTransitionGroup : Vds :=
-  .atom { keywords := Sym.keywordSet [.contain, .nearest, .normal], simple := Sym.simpleSet [.customIdent] }
+  .atom { keywords := Sym.keywordSet [.contain, .nearest, .normal], customIdent := some Exclusion.viewTransitionGroup }
 
 def viewTransitionName : Vds :=
-  .atom { keywords := Sym.keywordSet [.none], simple := Sym.simpleSet [.customIdent] }
+  .atom { keywords := Sym.keywordSet [.none], customIdent := some Exclusion.viewTransitionName }
 
 def viewTransitionScope : Vds :=
   .atom { keywords := Sym.keywordSet [.all, .none] }
@@ -7437,7 +7437,7 @@ def voiceFamily : Vds :=
     .atom { keywords := Sym.keywordSet [.preserve] },
     .commaList (.oneOf [
       .atom { simple := Sym.simpleSet [.string] },
-      .plus (.atom { simple := Sym.simpleSet [.customIdent] }),
+      .plus (.atom { customIdent := some Exclusion.voiceFamily }),
       .seq [
         .opt (.atom Atoms.age),
         .atom Atoms.gender,
@@ -7509,7 +7509,7 @@ def width : Vds :=
 def willChange : Vds :=
   .oneOf [
     .atom { keywords := Sym.keywordSet [.auto] },
-    .commaList (.atom { keywords := Sym.keywordSet [.contents, .scrollPosition], simple := Sym.simpleSet [.customIdent] })]
+    .commaList (.atom { keywords := Sym.keywordSet [.contents, .scrollPosition], customIdent := some Exclusion.willChange })]
 
 def windowDrag : Vds :=
   .atom { keywords := Sym.keywordSet [.move, .none] }

@@ -24,7 +24,7 @@ browsers accept it. -/
 inductive Substitution where
   | var (name : DashedIdent) (fallback : Option TokenSeq := none)
   /-- `env(name index*, fallback?)`. -/
-  | env (name : CustomIdent) (indices : List Nat := []) (fallback : Option TokenSeq := none)
+  | env (name : CustomIdent CustomIdent.reserved) (indices : List Nat := []) (fallback : Option TokenSeq := none)
   | attr (name : Ident) (type : Option AttrType := none) (fallback : Option TokenSeq := none)
   deriving Repr
 

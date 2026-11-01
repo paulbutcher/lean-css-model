@@ -27,7 +27,7 @@ def Sep.punct : Sep → Punct
 
 /-- Kinds of component known by their kind alone. -/
 inductive SimpleKind where
-  | customIdent | dashedIdent | string | url | hexColor | unicodeRange | hash
+  | dashedIdent | string | url | hexColor | unicodeRange | hash
   /-- A `<declaration-value>`: a balanced sequence of tokens. -/
   | tokens
   /-- A unitless `0`, which is also a `<length>`. -/
@@ -37,12 +37,12 @@ inductive SimpleKind where
   deriving DecidableEq, Repr
 
 def SimpleKind.index : SimpleKind → Nat
-  | .customIdent => 0 | .dashedIdent => 1 | .string => 2 | .url => 3 | .hexColor => 4
-  | .unicodeRange => 5 | .hash => 6 | .tokens => 7 | .zero => 8 | .substitution => 9
+  | .dashedIdent => 0 | .string => 1 | .url => 2 | .hexColor => 3 | .unicodeRange => 4
+  | .hash => 5 | .tokens => 6 | .zero => 7 | .substitution => 8
 
 /-- What is known of a component at compile time: its kind, the identity of a keyword or
-function, and the range a number was proven to lie in, but never a magnitude. These are the
-letters of a value's shape. -/
+function, the range a number was proven to lie in and the keywords a custom identifier was
+proven not to be, but never a magnitude or a name. These are the letters of a value's shape. -/
 inductive Kind where
   | keyword (k : Keyword)
   /-- A function or block, by the variant whose argument grammar it was checked against. -/
@@ -50,6 +50,8 @@ inductive Kind where
   | sep (s : Sep)
   | numeric (n : NumericKind) (r : Range)
   | simple (s : SimpleKind)
+  /-- A `<custom-ident>`, by the bit set of keywords it was proven not to be. -/
+  | customIdent (excluded : Nat)
   /-- A math function, by the type it resolves to. -/
   | math (t : CalcType)
   /-- A math function whose parts could not be combined. -/
@@ -72,6 +74,8 @@ structure Sym where
   frequency : Option Range := none
   resolution : Option Range := none
   flex : Option Range := none
+  /-- The keywords a `<custom-ident>` must be proven not to be, if one is admitted. -/
+  customIdent : Option Nat := none
   /-- Matches every component. -/
   any : Bool := false
   deriving DecidableEq, Repr
@@ -80,7 +84,7 @@ namespace Sym
 
 def bits (l : List Nat) : Nat := l.foldl (fun acc i => acc ||| (1 <<< i)) 0
 
-def keywordSet (l : List Keyword) : Nat := bits (l.map Keyword.id)
+def keywordSet (l : List Keyword) : Nat := Keyword.bits l
 
 def functionSet (l : List Func) : Nat := bits (l.map Func.id)
 
@@ -128,6 +132,7 @@ def Kind.conforms (k : Kind) (s : Sym) : Bool :=
     s.simple.testBit SimpleKind.zero.index ||
       [s.length, s.number, s.integer].any fun r => r.any (·.contains 0)
   | .simple x => s.simple.testBit x.index
+  | .customIdent x => s.customIdent.any fun e => e &&& x == e
   | .math t => t.conforms s
   | .mathInvalid => false
 

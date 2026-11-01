@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.3.0] - 2026-11-01
+
+* A `<custom-ident>` excludes the keywords of the grammar it appears in, or those its specification's prose names, so `CustomIdent` and `Kind.customIdent` are indexed by the keywords excluded
+* `@layer` names exclude the CSS-wide keywords
+
 ## [0.2.0] - 2026-10-31
 
 * `hasUnchecked` sees unchecked parts of `@navigation` conditions
