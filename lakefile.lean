@@ -7,10 +7,10 @@ import Lake
 open Lake DSL
 
 package «css-model» where
-  version := v!"0.4.0"
+  version := v!"0.4.1"
   leanOptions := #[⟨`warningAsError, true⟩]
 
-require regular from git "https://github.com/paulbutcher/lean-regular" @ "v0.2.1"
+require regular from git "https://github.com/paulbutcher/lean-regular" @ "v0.3.0"
 
 @[default_target]
 lean_lib CssModel
